@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(uuid())
+  phone     String    @unique
+  name      String
+  email     String?   @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  addresses Address[]
+  orders    Order[]
+  payments  Payment[]
+  ratings   Rating[]
+
+  @@index([phone])
+  @@index([email])
+  @@map("users")
+}
+
+model Address {
+  id          String   @id @default(uuid())
+  userId      String
+  label       String
+  addressLine String
+  city        String   @default("Amman")
+  latitude    Decimal  @db.Decimal(10, 8)
+  longitude   Decimal  @db.Decimal(11, 8)
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders      Order[]
+
+  @@index([userId])
+  @@index([latitude, longitude])
+  @@map("addresses")
+}
+
+model Vendor {
+  id              String   @id @default(uuid())
+  name            String
+  phone           String   @unique
+  businessLicense String?
+  address         String
+  latitude        Decimal  @db.Decimal(10, 8)
+  longitude       Decimal  @db.Decimal(11, 8)
+  tankPrice       Decimal  @db.Decimal(10, 2)
+  serviceFee      Decimal  @db.Decimal(10, 2)
+  isActive        Boolean  @default(true)
+  rating          Float    @default(0)
+  totalOrders     Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  drivers         Driver[]
+  orders          Order[]
+  ratings         Rating[]
+
+  @@index([phone])
+  @@index([latitude, longitude])
+  @@index([isActive])
+  @@map("vendors")
+}
+
+model Driver {
+  id               String   @id @default(uuid())
+  vendorId         String
+  name             String
+  phone            String   @unique
+  vehicleInfo      Json?
+  currentLatitude  Decimal? @db.Decimal(10, 8)
+  currentLongitude Decimal? @db.Decimal(11, 8)
+  isAvailable      Boolean  @default(true)
+  rating           Float    @default(0)
+  totalDeliveries  Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  vendor           Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  orders           Order[]
+  ratings          Rating[]
+
+  @@index([vendorId])
+  @@index([phone])
+  @@index([isAvailable])
+  @@index([currentLatitude, currentLongitude])
+  @@map("drivers")
+}
+
+model Order {
+  id                    String               @id @default(uuid())
+  orderNumber           String               @unique
+  userId                String
+  vendorId              String?
+  driverId              String?
+  addressId             String
+  status                String               @default("PENDING")
+  tankQuantity          Int                  @default(1)
+  tankPrice             Decimal              @db.Decimal(10, 2)
+  serviceFee            Decimal              @db.Decimal(10, 2)
+  totalPrice            Decimal              @db.Decimal(10, 2)
+  paymentMethod         String?
+  paymentStatus         String               @default("PENDING")
+  estimatedDeliveryTime DateTime?
+  deliveredAt           DateTime?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  statusHistory         OrderStatusHistory[]
+  address               Address              @relation(fields: [addressId], references: [id], onDelete: Cascade)
+  driver                Driver?              @relation(fields: [driverId], references: [id])
+  user                  User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendor                Vendor?              @relation(fields: [vendorId], references: [id])
+  payment               Payment?
+  rating                Rating?
+
+  @@index([userId])
+  @@index([vendorId])
+  @@index([driverId])
+  @@index([status])
+  @@index([orderNumber])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderStatusHistory {
+  id        String   @id @default(uuid())
+  orderId   String
+  status    String
+  notes     String?
+  timestamp DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([timestamp])
+  @@map("order_status_history")
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  orderId       String   @unique
+  userId        String
+  amount        Decimal  @db.Decimal(10, 2)
+  method        String
+  status        String   @default("PENDING")
+  transactionId String?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([status])
+  @@index([transactionId])
+  @@map("payments")
+}
+
+model Rating {
+  id        String   @id @default(uuid())
+  orderId   String   @unique
+  userId    String
+  driverId  String?
+  vendorId  String?
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  driver    Driver?  @relation(fields: [driverId], references: [id])
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendor    Vendor?  @relation(fields: [vendorId], references: [id])
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([driverId])
+  @@index([vendorId])
+  @@index([rating])
+  @@map("ratings")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model spatial_ref_sys {
+  srid      Int     @id
+  auth_name String? @db.VarChar(256)
+  auth_srid Int?
+  srtext    String? @db.VarChar(2048)
+  proj4text String? @db.VarChar(2048)
+}

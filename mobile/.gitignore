@@ -1,0 +1,30 @@
+# Expo
+.expo/
+.expo-shared/
+dist/
+web-build/
+.next/
+
+# Node
+node_modules/
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+
+
+
+

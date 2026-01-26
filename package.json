@@ -1,0 +1,32 @@
+{
+  "name": "samis-list",
+  "version": "1.0.0",
+  "description": "Gas delivery mobile application for Amman, Jordan",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "mobile",
+    "shared"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:mobile": "npm run start --workspace=mobile",
+    "build:shared": "npm run build --workspace=shared",
+    "build:backend": "npm run build:shared && npm run build --workspace=backend",
+    "build:mobile": "npm run build --workspace=mobile",
+    "install:all": "npm install",
+    "lint": "npm run lint --workspaces",
+    "test": "npm run test --workspaces",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "husky": "^8.0.3",
+    "@commitlint/cli": "^18.4.4",
+    "@commitlint/config-conventional": "^18.4.4"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
+

@@ -1,0 +1,33 @@
+{
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "phone": "Phone"
+  },
+  "home": {
+    "welcome": "Welcome to Sami's List",
+    "subtitle": "Order your gas cylinders with ease"
+  },
+  "orders": {
+    "title": "My Orders",
+    "empty": "No orders yet"
+  },
+  "profile": {
+    "title": "Profile",
+    "email": "Email",
+    "phone": "Phone",
+    "logout": "Logout"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  }
+}
+
+
+
+
+
