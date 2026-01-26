@@ -72,6 +72,7 @@ export class AuthService {
       name: string;
       email?: string;
     };
+    isGuest?: boolean;
   }> {
     const { phone, otp } = verifyOtpDto;
 
