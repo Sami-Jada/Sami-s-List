@@ -85,7 +85,7 @@ export class AuthService {
         throw new UnauthorizedException('Invalid or expired OTP code');
       }
 
-      // Get or create user
+      // Get or create user // To trigger a new deployment in railway
       let user = await this.usersService.findByPhone(phone);
       
       if (!user) {
