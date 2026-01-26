@@ -20,11 +20,8 @@ async function bootstrap() {
   // CORS configuration
   const corsOrigins = process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'];
   
-  // In development, allow all Expo Go origins (exp://*)
-  const isDevelopment = process.env.NODE_ENV !== 'production';
-  const allowedOrigins = isDevelopment 
-    ? [...corsOrigins, /^exp:\/\/.*$/] // Allow all exp:// origins in development
-    : corsOrigins;
+  // Always allow Expo Go origins (exp://*) for mobile app connectivity
+  const allowedOrigins = [...corsOrigins, /^exp:\/\/.*$/];
   
   app.enableCors({
     origin: allowedOrigins,
