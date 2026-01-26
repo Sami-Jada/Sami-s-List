@@ -4,11 +4,42 @@
     "register": "التسجيل",
     "email": "البريد الإلكتروني",
     "password": "كلمة المرور",
-    "phone": "الهاتف"
+    "phone": "الهاتف",
+    "signIn": "تسجيل الدخول"
   },
   "home": {
     "welcome": "مرحباً بك في قائمة سامي",
-    "subtitle": "اطلب أسطوانات الغاز بسهولة"
+    "subtitle": "اطلب أسطوانات الغاز بسهولة",
+    "orderNow": "اطلب أسطوانة غاز",
+    "orderSteps": "اطلب في 3 خطوات بسيطة",
+    "step1": "اختر الكمية",
+    "step2": "أدخل بياناتك",
+    "step3": "احصل على التوصيل"
+  },
+  "order": {
+    "quantity": "الكمية",
+    "selectQuantity": "كم أسطوانة تريد؟",
+    "continue": "متابعة",
+    "phone": "رقم الهاتف",
+    "phonePlaceholder": "+962XXXXXXXXX",
+    "address": "عنوان التوصيل",
+    "addressLine": "العنوان",
+    "addressLinePlaceholder": "المبنى، الشارع، الشقة",
+    "city": "المدينة",
+    "cityDefault": "عمان",
+    "paymentMethod": "طريقة الدفع",
+    "cash": "الدفع عند الاستلام",
+    "card": "بطاقة",
+    "placeOrder": "تأكيد الطلب",
+    "orderPlaced": "تم الطلب!",
+    "orderNumber": "رقم الطلب",
+    "estimatedDelivery": "وقت التوصيل المتوقع",
+    "totalPrice": "السعر الإجمالي",
+    "viewOrderStatus": "عرض حالة الطلب",
+    "createAccount": "إنشاء حساب",
+    "createAccountPrompt": "أضف كلمة مرور لحفظ معلوماتك ومتابعة الطلبات",
+    "continueAsGuest": "المتابعة كضيف",
+    "signInToSave": "سجل الدخول لحفظ معلوماتك"
   },
   "orders": {
     "title": "طلباتي",
@@ -18,12 +49,22 @@
     "title": "الملف الشخصي",
     "email": "البريد الإلكتروني",
     "phone": "الهاتف",
-    "logout": "تسجيل الخروج"
+    "logout": "تسجيل الخروج",
+    "createPassword": "إنشاء كلمة مرور",
+    "password": "كلمة المرور",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "saveAccount": "حفظ الحساب",
+    "accountBenefits": "المزايا:",
+    "benefit1": "تتبع طلباتك",
+    "benefit2": "دفع أسرع",
+    "benefit3": "سجل الطلبات"
   },
   "common": {
     "loading": "جاري التحميل...",
     "error": "خطأ",
-    "success": "نجح"
+    "success": "نجح",
+    "cancel": "إلغاء",
+    "back": "رجوع"
   }
 }
 

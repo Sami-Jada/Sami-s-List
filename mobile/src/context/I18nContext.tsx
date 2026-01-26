@@ -1,9 +1,12 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import * as Localization from 'expo-localization';
-import { I18n } from 'i18n-js';
+import { getLocales } from 'expo-localization';
 import en from '../locales/en.json';
 import ar from '../locales/ar.json';
 
+// Import I18n using ES6 syntax (Metro config now supports .mjs files)
+import { I18n } from 'i18n-js';
+
+// Initialize i18n instance
 const i18n = new I18n({
   en,
   ar,
@@ -11,7 +14,17 @@ const i18n = new I18n({
 
 i18n.defaultLocale = 'en';
 i18n.enableFallback = true;
-i18n.locale = Localization.locale.split('-')[0] || 'en';
+
+// Get locale using expo-localization API
+try {
+  const locales = getLocales();
+  if (locales && locales.length > 0) {
+    i18n.locale = locales[0].languageCode || locales[0].languageTag?.split('-')[0] || 'en';
+  }
+} catch {
+  // Fallback to default locale if detection fails
+  i18n.locale = 'en';
+}
 
 interface I18nContextType {
   locale: string;

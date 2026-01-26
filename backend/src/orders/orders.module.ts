@@ -7,12 +7,16 @@ import { AddressesHelperService } from './services/addresses-helper.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { VendorsModule } from '../vendors/vendors.module';
 import { DriversModule } from '../drivers/drivers.module';
+import { UsersModule } from '../users/users.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     PrismaModule,
     VendorsModule,
     DriversModule,
+    UsersModule,
+    AuthModule,
   ],
   controllers: [OrdersController],
   providers: [

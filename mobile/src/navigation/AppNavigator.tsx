@@ -1,9 +1,9 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuth } from '../context/AuthContext';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
+import OrderNavigator from './OrderNavigator';
 
 const Stack = createStackNavigator();
 
@@ -15,6 +15,11 @@ export default function AppNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Main" component={MainNavigator} />
+      <Stack.Screen 
+        name="Order" 
+        component={OrderNavigator}
+        options={{ presentation: 'card' }}
+      />
       <Stack.Screen 
         name="Auth" 
         component={AuthNavigator}

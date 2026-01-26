@@ -1,30 +1,53 @@
-import React from 'react';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import Constants from 'expo-constants';
 import { AuthProvider } from './context/AuthContext';
 import AppNavigator from './navigation/AppNavigator';
 import { I18nProvider } from './context/I18nContext';
 
-// Log API URL on app startup
-const API_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:3000/api';
-console.log('========================================');
-console.log('🚀 APP STARTING');
-console.log('🔗 API URL:', API_URL);
-console.log('📱 Expo Config API URL:', Constants.expoConfig?.extra?.apiUrl);
-console.log('🌍 Environment:', Constants.expoConfig?.extra?.environment);
-console.log('========================================');
+// Error Boundary to catch component errors
+class ErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    console.error('Error Boundary caught error:', error);
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('Error Boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <React.Fragment>
+          <StatusBar style="auto" />
+        </React.Fragment>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function App() {
   return (
-    <I18nProvider>
-      <AuthProvider>
-        <NavigationContainer>
-          <StatusBar style="auto" />
-          <AppNavigator />
-        </NavigationContainer>
-      </AuthProvider>
-    </I18nProvider>
+    <ErrorBoundary>
+      <I18nProvider>
+        <AuthProvider>
+          <NavigationContainer>
+            <StatusBar style="auto" />
+            <AppNavigator />
+          </NavigationContainer>
+        </AuthProvider>
+      </I18nProvider>
+    </ErrorBoundary>
   );
 }
 

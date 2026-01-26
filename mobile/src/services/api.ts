@@ -4,14 +4,6 @@ import Constants from 'expo-constants';
 
 const API_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:3000/api';
 
-// Debug: Log API URL being used
-console.log('========================================');
-console.log('🔗 API SERVICE INITIALIZING');
-console.log('📍 API URL:', API_URL);
-console.log('📱 Expo Config API URL:', Constants.expoConfig?.extra?.apiUrl);
-console.log('🌍 Environment:', Constants.expoConfig?.extra?.environment);
-console.log('========================================');
-
 class ApiService {
   private api: AxiosInstance;
 
@@ -80,7 +72,7 @@ class ApiService {
               const { accessToken } = response.data;
               await SecureStore.setItemAsync('access_token', accessToken);
 
-              originalRequest.headers.Authorization = `Bearer ${access_token}`;
+              originalRequest.headers.Authorization = `Bearer ${accessToken}`;
               return this.api(originalRequest);
             }
           } catch (refreshError) {

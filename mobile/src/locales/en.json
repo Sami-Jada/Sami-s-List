@@ -4,11 +4,42 @@
     "register": "Register",
     "email": "Email",
     "password": "Password",
-    "phone": "Phone"
+    "phone": "Phone",
+    "signIn": "Sign In"
   },
   "home": {
     "welcome": "Welcome to Sami's List",
-    "subtitle": "Order your gas cylinders with ease"
+    "subtitle": "Order your gas cylinders with ease",
+    "orderNow": "Order Gas Cylinder",
+    "orderSteps": "Order in 3 simple steps",
+    "step1": "Select quantity",
+    "step2": "Enter your details",
+    "step3": "Get delivery"
+  },
+  "order": {
+    "quantity": "Quantity",
+    "selectQuantity": "How many cylinders?",
+    "continue": "Continue",
+    "phone": "Phone Number",
+    "phonePlaceholder": "+962XXXXXXXXX",
+    "address": "Delivery Address",
+    "addressLine": "Street Address",
+    "addressLinePlaceholder": "Building, Street, Apartment",
+    "city": "City",
+    "cityDefault": "Amman",
+    "paymentMethod": "Payment Method",
+    "cash": "Cash on Delivery",
+    "card": "Card",
+    "placeOrder": "Place Order",
+    "orderPlaced": "Order Placed!",
+    "orderNumber": "Order Number",
+    "estimatedDelivery": "Estimated Delivery",
+    "totalPrice": "Total Price",
+    "viewOrderStatus": "View Order Status",
+    "createAccount": "Create Account",
+    "createAccountPrompt": "Add a password to save your info and track orders",
+    "continueAsGuest": "Continue as Guest",
+    "signInToSave": "Sign in to save your info"
   },
   "orders": {
     "title": "My Orders",
@@ -18,12 +49,22 @@
     "title": "Profile",
     "email": "Email",
     "phone": "Phone",
-    "logout": "Logout"
+    "logout": "Logout",
+    "createPassword": "Create Password",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "saveAccount": "Save Account",
+    "accountBenefits": "Benefits:",
+    "benefit1": "Track your orders",
+    "benefit2": "Faster checkout",
+    "benefit3": "Order history"
   },
   "common": {
     "loading": "Loading...",
     "error": "Error",
-    "success": "Success"
+    "success": "Success",
+    "cancel": "Cancel",
+    "back": "Back"
   }
 }
 

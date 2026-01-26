@@ -33,6 +33,7 @@ export default {
       environment: process.env.NODE_ENV || 'development',
     },
     plugins: [
+      'expo-localization',
       'expo-secure-store',
     ],
   },

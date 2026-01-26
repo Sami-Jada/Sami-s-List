@@ -96,6 +96,16 @@ export class AuthService {
         user = await this.usersService.findById(newUser.id);
       }
 
+      // Check if this is a guest user (empty name) with existing orders
+      // If so, this is a conversion from guest to registered user
+      const isGuestUser = user.name === '';
+      
+      if (isGuestUser) {
+        this.logger.log(`Guest user ${user.id} (${phone}) is signing up - will merge orders if any exist`);
+        // Note: Orders will be merged when user updates their name/profile
+        // For now, user remains as guest until they update their profile
+      }
+
       // Generate tokens
       const { accessToken, refreshToken } =
         await this.tokenService.generateTokens(user.id, user.phone, deviceId);
@@ -111,6 +121,7 @@ export class AuthService {
           name: user.name,
           email: user.email || undefined,
         },
+        isGuest: isGuestUser, // Indicate if this is a guest user
       };
     } catch (error: any) {
       if (error instanceof UnauthorizedException) {

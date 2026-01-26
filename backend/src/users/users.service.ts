@@ -98,9 +98,13 @@ export class UsersService {
 
   /**
    * Update user profile
+   * If user is converting from guest (name was empty), log the conversion
    */
   async update(id: string, updateUserDto: UpdateUserDto) {
     const user = await this.findById(id);
+
+    // Check if this is a guest-to-user conversion (name was empty, now being set)
+    const isGuestConversion = user.name === '' && updateUserDto.name && updateUserDto.name.trim() !== '';
 
     // Check if email is being changed and if it's already taken
     if (updateUserDto.email && updateUserDto.email !== user.email) {
@@ -125,7 +129,17 @@ export class UsersService {
       },
     });
 
-    this.logger.log(`User updated: ${id}`);
+    if (isGuestConversion) {
+      // Count orders for this user to log conversion
+      const orderCount = await this.prisma.order.count({
+        where: { userId: id },
+      });
+      this.logger.log(
+        `Guest user converted to registered: ${id} (${user.phone}) - ${orderCount} existing orders`,
+      );
+    } else {
+      this.logger.log(`User updated: ${id}`);
+    }
 
     return updatedUser;
   }
@@ -166,5 +180,67 @@ export class UsersService {
     if (userId !== resourceUserId) {
       throw new ForbiddenException('You do not have access to this resource');
     }
+  }
+
+  /**
+   * Merge guest orders from a phone number into a registered user account
+   * This is called when a user signs up with a phone that has existing guest orders
+   */
+  async mergeGuestOrders(phone: string, registeredUserId: string) {
+    // Find guest user by phone (guest users have empty name)
+    const guestUser = await this.prisma.user.findUnique({
+      where: { phone },
+      include: {
+        orders: true,
+        addresses: true,
+      },
+    });
+
+    if (!guestUser) {
+      // No guest user found, nothing to merge
+      this.logger.log(`No guest orders found for phone ${phone}`);
+      return { merged: false, ordersCount: 0, addressesCount: 0 };
+    }
+
+    // Don't merge if it's the same user
+    if (guestUser.id === registeredUserId) {
+      this.logger.log(`User ${registeredUserId} is the same as guest user, skipping merge`);
+      return { merged: false, ordersCount: 0, addressesCount: 0 };
+    }
+
+    // Use transaction to ensure atomicity
+    const result = await this.prisma.$transaction(async (tx) => {
+      // Transfer all orders from guest user to registered user
+      const ordersUpdate = await tx.order.updateMany({
+        where: { userId: guestUser.id },
+        data: { userId: registeredUserId },
+      });
+
+      // Transfer all addresses from guest user to registered user
+      const addressesUpdate = await tx.address.updateMany({
+        where: { userId: guestUser.id },
+        data: { userId: registeredUserId },
+      });
+
+      // Delete the guest user account (orders and addresses are now owned by registered user)
+      await tx.user.delete({
+        where: { id: guestUser.id },
+      });
+
+      return {
+        ordersCount: ordersUpdate.count,
+        addressesCount: addressesUpdate.count,
+      };
+    });
+
+    this.logger.log(
+      `Merged guest orders: ${result.ordersCount} orders and ${result.addressesCount} addresses from guest user ${guestUser.id} to registered user ${registeredUserId}`,
+    );
+
+    return {
+      merged: true,
+      ordersCount: result.ordersCount,
+      addressesCount: result.addressesCount,
+    };
   }
 }

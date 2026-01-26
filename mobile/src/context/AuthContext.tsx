@@ -1,14 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { authService } from '../services/authService';
-import { User } from '@shared/types';
+import { User } from '@shared';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isGuestUser: boolean;
   sendOtp: (phone: string) => Promise<{ message: string }>;
   verifyOtp: (phone: string, otp: string) => Promise<void>;
+  createPassword: (name: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -63,11 +65,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(response.user);
   };
 
+  const createPassword = async (name: string) => {
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Update user profile with name to convert from guest to registered
+    // In this OTP-based system, "creating password" means completing profile
+    const updatedUser = await authService.updateProfile({ name });
+    setUser(updatedUser);
+  };
+
   const logout = async () => {
     await SecureStore.deleteItemAsync('access_token');
     await SecureStore.deleteItemAsync('refresh_token');
     setUser(null);
   };
+
+  // Check if user is a guest (empty name indicates guest user)
+  const isGuestUser = user?.name === '' || user?.name === null || !user?.name;
 
   return (
     <AuthContext.Provider
@@ -75,8 +91,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isAuthenticated: !!user,
         isLoading,
+        isGuestUser,
         sendOtp,
         verifyOtp,
+        createPassword,
         logout,
       }}
     >

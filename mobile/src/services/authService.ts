@@ -1,5 +1,5 @@
 import api from './api';
-import { User } from '@shared/types';
+import { User } from '@shared';
 
 interface LoginResponse {
   accessToken: string;
@@ -29,6 +29,11 @@ export const authService = {
 
   async getCurrentUser(): Promise<User> {
     const response = await api.get<User>('/users/me');
+    return response.data;
+  },
+
+  async updateProfile(updateData: { name?: string; email?: string }): Promise<User> {
+    const response = await api.patch<User>('/users/me', updateData);
     return response.data;
   },
 
