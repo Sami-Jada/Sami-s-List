@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useI18n } from '../../context/I18nContext';
+import { LanguageToggle } from '../../components';
 import { orderService } from '../../services/orderService';
 import { PaymentMethod } from '@shared';
 import * as SecureStore from 'expo-secure-store';
@@ -91,6 +92,7 @@ export default function GuestCheckoutScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <LanguageToggle />
       <Text style={styles.title}>{t('order.phone')}</Text>
       <TextInput
         style={styles.input}

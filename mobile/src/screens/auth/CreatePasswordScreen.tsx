@@ -12,6 +12,7 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useI18n } from '../../context/I18nContext';
 import { useAuth } from '../../context/AuthContext';
+import { LanguageToggle } from '../../components';
 
 export default function CreatePasswordScreen() {
   const { t } = useI18n();
@@ -52,6 +53,7 @@ export default function CreatePasswordScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <LanguageToggle />
       <Text style={styles.title}>{t('profile.createPassword')}</Text>
       <Text style={styles.subtitle}>{t('order.createAccountPrompt')}</Text>
 

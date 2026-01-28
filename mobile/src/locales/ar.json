@@ -59,6 +59,18 @@
     "benefit2": "دفع أسرع",
     "benefit3": "سجل الطلبات"
   },
+  "driver": {
+    "customer": "العميل",
+    "quantity": "الكمية",
+    "address": "العنوان",
+    "noAddress": "لا يوجد عنوان مسجل",
+    "total": "الإجمالي",
+    "noAssigned": "لا توجد طلبات مخصصة",
+    "noActive": "لا توجد طلبات نشطة",
+    "noHistory": "لا توجد طلبات سابقة",
+    "deliveredAt": "تم التسليم في",
+    "profileTitle": "ملف السائق"
+  },
   "common": {
     "loading": "جاري التحميل...",
     "error": "خطأ",

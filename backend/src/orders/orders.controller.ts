@@ -70,6 +70,33 @@ export class OrdersController {
     return this.ordersService.findAll(filters, user.userId, 'USER');
   }
 
+  @Roles('DRIVER', 'ADMIN')
+  @Get('driver/assigned')
+  @ApiOperation({ summary: 'Get assigned orders for current driver' })
+  @ApiResponse({ status: 200, description: 'List of assigned orders' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getDriverAssigned(@CurrentUser() user: any) {
+    return this.ordersService.findAssignedForDriver(user.userId);
+  }
+
+  @Roles('DRIVER', 'ADMIN')
+  @Get('driver/active')
+  @ApiOperation({ summary: 'Get active orders for current driver (ASSIGNED, EN_ROUTE)' })
+  @ApiResponse({ status: 200, description: 'List of active orders' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getDriverActive(@CurrentUser() user: any) {
+    return this.ordersService.findActiveForDriver(user.userId);
+  }
+
+  @Roles('DRIVER', 'ADMIN')
+  @Get('driver/history')
+  @ApiOperation({ summary: 'Get order history for current driver (DELIVERED, COMPLETED)' })
+  @ApiResponse({ status: 200, description: 'List of historical orders' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getDriverHistory(@CurrentUser() user: any) {
+    return this.ordersService.findHistoryForDriver(user.userId);
+  }
+
   @Get('my-orders')
   @ApiOperation({ summary: 'Get current user orders (convenience endpoint)' })
   @ApiResponse({ status: 200, description: 'List of user orders' })

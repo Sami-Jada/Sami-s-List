@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useI18n } from '../../context/I18nContext';
+import { LanguageToggle } from '../../components';
 
 export default function OrderQuantityScreen() {
   const { t } = useI18n();
@@ -26,6 +27,7 @@ export default function OrderQuantityScreen() {
 
   return (
     <View style={styles.container}>
+      <LanguageToggle />
       <Text style={styles.title}>{t('order.selectQuantity')}</Text>
 
       <View style={styles.quantityContainer}>

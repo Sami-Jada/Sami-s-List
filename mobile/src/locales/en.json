@@ -59,6 +59,18 @@
     "benefit2": "Faster checkout",
     "benefit3": "Order history"
   },
+  "driver": {
+    "customer": "Customer",
+    "quantity": "Quantity",
+    "address": "Address",
+    "noAddress": "No address provided",
+    "total": "Total",
+    "noAssigned": "No assigned orders",
+    "noActive": "No active orders",
+    "noHistory": "No previous orders",
+    "deliveredAt": "Delivered at",
+    "profileTitle": "Driver Profile"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",

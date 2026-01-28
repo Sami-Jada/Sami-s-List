@@ -113,6 +113,31 @@ export class DriversService {
   }
 
   /**
+   * Find driver by phone number
+   */
+  async findByPhone(phone: string) {
+    const driver = await this.prisma.driver.findUnique({
+      where: { phone },
+      include: {
+        vendor: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            address: true,
+          },
+        },
+      },
+    });
+
+    if (!driver) {
+      throw new NotFoundException(`Driver with phone ${phone} not found`);
+    }
+
+    return driver;
+  }
+
+  /**
    * Find available drivers for a vendor
    */
   async findAvailable(vendorId: string) {

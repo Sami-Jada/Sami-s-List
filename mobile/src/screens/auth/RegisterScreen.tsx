@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
+import { LanguageToggle } from '../../components';
 
 export default function RegisterScreen() {
   const [email, setEmail] = useState('');
@@ -36,6 +37,7 @@ export default function RegisterScreen() {
 
   return (
     <View style={styles.container}>
+      <LanguageToggle />
       <Text style={styles.title}>{t('auth.register')}</Text>
       <TextInput
         style={styles.input}

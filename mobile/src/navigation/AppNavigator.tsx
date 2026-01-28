@@ -4,17 +4,23 @@ import { useAuth } from '../context/AuthContext';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import OrderNavigator from './OrderNavigator';
+import DriverNavigator from './DriverNavigator';
 
 const Stack = createStackNavigator();
 
 export default function AppNavigator() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, isDriver } = useAuth();
 
-  // Show main app for both authenticated and guest users
-  // Auth screen is only shown when explicitly navigating to it
+  // For now, we route based on role:
+  // - Driver accounts go to DriverNavigator
+  // - Everyone else (guest or regular user) goes to MainNavigator
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Main" component={MainNavigator} />
+      {isDriver ? (
+        <Stack.Screen name="DriverMain" component={DriverNavigator} />
+      ) : (
+        <Stack.Screen name="Main" component={MainNavigator} />
+      )}
       <Stack.Screen 
         name="Order" 
         component={OrderNavigator}

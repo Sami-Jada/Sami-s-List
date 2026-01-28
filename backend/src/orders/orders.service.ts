@@ -310,6 +310,7 @@ export class OrdersService {
     };
   }
 
+
   /**
    * Find all orders with optional filters
    */
@@ -348,6 +349,165 @@ export class OrdersService {
 
     return this.prisma.order.findMany({
       where,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            email: true,
+          },
+        },
+        vendor: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            address: true,
+          },
+        },
+        driver: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+          },
+        },
+        address: true,
+        payment: true,
+        statusHistory: {
+          take: 5,
+          orderBy: { timestamp: 'desc' },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
+   * Helper: resolve driver for the current authenticated user via phone mapping
+   * Used for driver-specific order queries
+   */
+  private async getDriverForUser(userId: string) {
+    const user = await this.usersService.findById(userId);
+
+    // Map user.phone -> driver.phone
+    const driver = await this.driversService.findByPhone(user.phone);
+
+    if (!driver) {
+      throw new ForbiddenException('Driver account not found for this user');
+    }
+
+    return driver;
+  }
+
+  /**
+   * Driver-specific: get assigned orders for the current driver
+   */
+  async findAssignedForDriver(currentUserId: string) {
+    const driver = await this.getDriverForUser(currentUserId);
+
+    return this.prisma.order.findMany({
+      where: {
+        driverId: driver.id,
+        status: OrderStatus.ASSIGNED,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            email: true,
+          },
+        },
+        vendor: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            address: true,
+          },
+        },
+        driver: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+          },
+        },
+        address: true,
+        payment: true,
+        statusHistory: {
+          take: 5,
+          orderBy: { timestamp: 'desc' },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
+   * Driver-specific: get active orders (ASSIGNED, EN_ROUTE) for the current driver
+   */
+  async findActiveForDriver(currentUserId: string) {
+    const driver = await this.getDriverForUser(currentUserId);
+
+    return this.prisma.order.findMany({
+      where: {
+        driverId: driver.id,
+        status: {
+          in: [OrderStatus.ASSIGNED, OrderStatus.EN_ROUTE],
+        } as any,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            email: true,
+          },
+        },
+        vendor: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            address: true,
+          },
+        },
+        driver: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+          },
+        },
+        address: true,
+        payment: true,
+        statusHistory: {
+          take: 5,
+          orderBy: { timestamp: 'desc' },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
+   * Driver-specific: get history orders (DELIVERED, COMPLETED) for the current driver
+   */
+  async findHistoryForDriver(currentUserId: string) {
+    const driver = await this.getDriverForUser(currentUserId);
+
+    return this.prisma.order.findMany({
+      where: {
+        driverId: driver.id,
+        status: {
+          in: [OrderStatus.DELIVERED, OrderStatus.COMPLETED],
+        } as any,
+      },
       include: {
         user: {
           select: {

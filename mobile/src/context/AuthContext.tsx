@@ -8,6 +8,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   isGuestUser: boolean;
+  isDriver: boolean;
   sendOtp: (phone: string) => Promise<{ message: string }>;
   verifyOtp: (phone: string, otp: string) => Promise<void>;
   createPassword: (name: string) => Promise<void>;
@@ -19,6 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDriver, setIsDriver] = useState(false);
 
   useEffect(() => {
     loadUser();
@@ -39,6 +41,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const userData = await authService.getCurrentUser();
         setUser(userData);
+        // For now, treat a specific role flag on the user as driver indicator if available
+        // Fallback: you can later replace this with an explicit "role" field.
+        // @ts-expect-error: role field may not yet be on User type
+        const hasDriverRole = Array.isArray((userData as any).roles)
+          ? (userData as any).roles.includes('DRIVER')
+          : (userData as any).role === 'DRIVER';
+        setIsDriver(hasDriverRole);
       } catch (error: any) {
         // Silently handle any errors - just clear token and continue as guest
         console.log('Failed to load user (continuing as guest):', error?.message || 'Unknown error');
@@ -63,6 +72,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await SecureStore.setItemAsync('access_token', response.accessToken);
     await SecureStore.setItemAsync('refresh_token', response.refreshToken);
     setUser(response.user);
+    // Apply same role detection logic on login
+    // @ts-expect-error: role field may not yet be on User type
+    const hasDriverRole = Array.isArray((response.user as any).roles)
+      ? (response.user as any).roles.includes('DRIVER')
+      : (response.user as any).role === 'DRIVER';
+    setIsDriver(hasDriverRole);
   };
 
   const createPassword = async (name: string) => {
@@ -80,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await SecureStore.deleteItemAsync('access_token');
     await SecureStore.deleteItemAsync('refresh_token');
     setUser(null);
+    setIsDriver(false);
   };
 
   // Check if user is a guest (empty name indicates guest user)
@@ -92,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         isLoading,
         isGuestUser,
+        isDriver,
         sendOtp,
         verifyOtp,
         createPassword,

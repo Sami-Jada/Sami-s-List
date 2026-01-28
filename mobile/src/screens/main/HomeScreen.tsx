@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-nati
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
+import { LanguageToggle } from '../../components';
 
 export default function HomeScreen() {
   const { t } = useI18n();
@@ -21,6 +22,7 @@ export default function HomeScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.content}>
+        <LanguageToggle />
         <Text style={styles.title}>{t('home.welcome')}</Text>
         <Text style={styles.subtitle}>{t('home.subtitle')}</Text>
 

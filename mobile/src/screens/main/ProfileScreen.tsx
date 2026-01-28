@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
+import { LanguageToggle } from '../../components';
 
 export default function ProfileScreen() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -19,6 +20,7 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
+      <LanguageToggle />
       <Text style={styles.title}>{t('profile.title')}</Text>
       {isAuthenticated && user ? (
         <>

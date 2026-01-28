@@ -12,6 +12,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
+import { LanguageToggle } from '../../components';
 
 type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Login'>;
 
@@ -65,6 +66,7 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
+      <LanguageToggle />
       <Text style={styles.title}>{t('auth.login')}</Text>
       
       <TextInput

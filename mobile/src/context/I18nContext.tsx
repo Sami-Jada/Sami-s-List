@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { getLocales } from 'expo-localization';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import * as SecureStore from 'expo-secure-store';
 import en from '../locales/en.json';
 import ar from '../locales/ar.json';
 
@@ -12,19 +12,10 @@ const i18n = new I18n({
   ar,
 });
 
-i18n.defaultLocale = 'en';
+i18n.defaultLocale = 'ar';
 i18n.enableFallback = true;
-
-// Get locale using expo-localization API
-try {
-  const locales = getLocales();
-  if (locales && locales.length > 0) {
-    i18n.locale = locales[0].languageCode || locales[0].languageTag?.split('-')[0] || 'en';
-  }
-} catch {
-  // Fallback to default locale if detection fails
-  i18n.locale = 'en';
-}
+// Default to Arabic unless user has explicitly chosen another language
+i18n.locale = 'ar';
 
 interface I18nContextType {
   locale: string;
@@ -38,9 +29,30 @@ const I18nContext = createContext<I18nContextType | undefined>(undefined);
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState(i18n.locale);
 
+  // Load saved language preference on mount
+  useEffect(() => {
+    const loadPreferredLanguage = async () => {
+      try {
+        const savedLocale = await SecureStore.getItemAsync('preferred_language');
+        if (savedLocale && (savedLocale === 'en' || savedLocale === 'ar')) {
+          i18n.locale = savedLocale;
+          setLocaleState(savedLocale);
+        }
+      } catch {
+        // Ignore errors and keep default 'ar'
+      }
+    };
+
+    loadPreferredLanguage();
+  }, []);
+
   const setLocale = (newLocale: string) => {
     i18n.locale = newLocale;
     setLocaleState(newLocale);
+    // Persist preference so it applies across the whole app
+    SecureStore.setItemAsync('preferred_language', newLocale).catch(() => {
+      // Non-critical if persistence fails
+    });
   };
 
   const t = (key: string, params?: any) => {

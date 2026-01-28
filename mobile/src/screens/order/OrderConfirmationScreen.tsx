@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useI18n } from '../../context/I18nContext';
+import { LanguageToggle } from '../../components';
 
 export default function OrderConfirmationScreen() {
   const { t } = useI18n();
@@ -35,6 +36,7 @@ export default function OrderConfirmationScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <LanguageToggle />
       <View style={styles.successIcon}>
         <Text style={styles.successIconText}>✓</Text>
       </View>
