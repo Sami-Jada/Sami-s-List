@@ -8,18 +8,13 @@ export default function OrderConfirmationScreen() {
   const { t } = useI18n();
   const navigation = useNavigation();
   const route = useRoute();
-  const { order, isGuest } = route.params as any;
+  const { order } = route.params as any;
 
   const handleCreateAccount = () => {
     navigation.navigate('Auth' as never, {
       screen: 'CreatePassword',
       params: { orderId: order.id },
     } as never);
-  };
-
-  const handleContinueAsGuest = () => {
-    // Navigate back to home
-    navigation.navigate('Main' as never, { screen: 'Home' } as never);
   };
 
   const handleViewOrderStatus = () => {
@@ -68,18 +63,6 @@ export default function OrderConfirmationScreen() {
           <Text style={styles.infoValue}>{order.totalPrice} JOD</Text>
         </View>
       </View>
-
-      {isGuest && (
-        <View style={styles.conversionPrompt}>
-          <Text style={styles.conversionTitle}>{t('order.createAccountPrompt')}</Text>
-          <TouchableOpacity style={styles.createAccountButton} onPress={handleCreateAccount}>
-            <Text style={styles.createAccountButtonText}>{t('order.createAccount')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleContinueAsGuest}>
-            <Text style={styles.continueAsGuestText}>{t('order.continueAsGuest')}</Text>
-          </TouchableOpacity>
-        </View>
-      )}
 
       <TouchableOpacity style={styles.viewOrderButton} onPress={handleViewOrderStatus}>
         <Text style={styles.viewOrderButtonText}>{t('order.viewOrderStatus')}</Text>
@@ -138,38 +121,6 @@ const styles = StyleSheet.create({
     color: '#000',
     flex: 1,
     textAlign: 'right',
-  },
-  conversionPrompt: {
-    width: '100%',
-    backgroundColor: '#E3F2FD',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 24,
-    alignItems: 'center',
-  },
-  conversionTitle: {
-    fontSize: 16,
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  createAccountButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    marginBottom: 12,
-    minWidth: 200,
-    alignItems: 'center',
-  },
-  createAccountButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  continueAsGuestText: {
-    color: '#007AFF',
-    fontSize: 14,
   },
   viewOrderButton: {
     backgroundColor: '#f0f0f0',

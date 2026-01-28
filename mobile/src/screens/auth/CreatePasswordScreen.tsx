@@ -13,6 +13,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useI18n } from '../../context/I18nContext';
 import { useAuth } from '../../context/AuthContext';
 import { LanguageToggle } from '../../components';
+import { addressService } from '../../services/addressService';
 
 export default function CreatePasswordScreen() {
   const { t } = useI18n();
@@ -21,6 +22,11 @@ export default function CreatePasswordScreen() {
   const { createPassword, user } = useAuth();
 
   const [name, setName] = useState('');
+  const [addressLine, setAddressLine] = useState('');
+  const [city, setCity] = useState('Amman');
+  // Default Amman coordinates; later we can hook this up to a map picker
+  const [latitude] = useState(31.9539);
+  const [longitude] = useState(35.9106);
   const [loading, setLoading] = useState(false);
 
   const handleSaveAccount = async () => {
@@ -34,10 +40,27 @@ export default function CreatePasswordScreen() {
       return;
     }
 
+    if (!addressLine.trim()) {
+      Alert.alert(t('common.error'), 'Please enter your address');
+      return;
+    }
+
     setLoading(true);
 
     try {
+      // 1) Update profile name
       await createPassword(name.trim());
+
+      // 2) Create default HOME address
+      await addressService.createAddress({
+        label: 'HOME',
+        addressLine: addressLine.trim(),
+        city: city || 'Amman',
+        latitude,
+        longitude,
+        isDefault: true,
+      });
+
       Alert.alert(t('common.success'), 'Account created successfully!', [
         {
           text: 'OK',
@@ -71,6 +94,23 @@ export default function CreatePasswordScreen() {
         value={name}
         onChangeText={setName}
         autoCapitalize="words"
+      />
+
+      <Text style={styles.label}>Address</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Enter your full address"
+        value={addressLine}
+        onChangeText={setAddressLine}
+        multiline
+      />
+
+      <Text style={styles.label}>City</Text>
+      <TextInput
+        style={styles.input}
+        value={city}
+        onChangeText={setCity}
+        placeholder="Amman"
       />
 
       <TouchableOpacity

@@ -1,10 +1,11 @@
 import api from './api';
 import { User } from '@shared';
 
-interface LoginResponse {
+export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
   user: User;
+  isGuest?: boolean;
 }
 
 export const authService = {
@@ -24,6 +25,7 @@ export const authService = {
       accessToken: response.data.accessToken,
       refreshToken: response.data.refreshToken,
       user: response.data.user,
+      isGuest: (response.data as any).isGuest,
     };
   },
 

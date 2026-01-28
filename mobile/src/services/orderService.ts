@@ -1,45 +1,4 @@
 import api from './api';
-import { PaymentMethod } from '@shared';
-
-export interface GuestOrderRequest {
-  phone: string;
-  address: {
-    label: 'HOME' | 'WORK' | 'OTHER';
-    addressLine: string;
-    city: string;
-    latitude: number;
-    longitude: number;
-    isDefault?: boolean;
-  };
-  tankQuantity: number;
-  paymentMethod: PaymentMethod;
-}
-
-export interface GuestOrderResponse {
-  order: {
-    id: string;
-    orderNumber: string;
-    status: string;
-    tankQuantity: number;
-    totalPrice: string;
-    estimatedDeliveryTime: string | null;
-    address: {
-      addressLine: string;
-      city: string;
-    };
-    vendor: {
-      name: string;
-      distance: number;
-    };
-    user: {
-      id: string;
-      name: string;
-      phone: string;
-    };
-  };
-  accessToken: string;
-  isGuest: boolean;
-}
 
 export interface Order {
   id: string;
@@ -59,10 +18,16 @@ export interface Order {
 
 export const orderService = {
   /**
-   * Create a guest order (no authentication required)
+   * Create an order for the authenticated user.
+   * The backend will use the user's default address and calculate pricing.
+   * (If you want to explicitly choose address/payment later, extend this DTO.)
    */
-  async createGuestOrder(request: GuestOrderRequest): Promise<GuestOrderResponse> {
-    const response = await api.post<GuestOrderResponse>('/orders/guest', request);
+  async createOrder(data: {
+    tankQuantity: number;
+    paymentMethod: string;
+    addressId?: string;
+  }): Promise<Order> {
+    const response = await api.post<Order>('/orders', data);
     return response.data;
   },
 

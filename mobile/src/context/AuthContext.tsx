@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { authService } from '../services/authService';
+import { authService, LoginResponse } from '../services/authService';
 import { User } from '@shared';
 
 interface AuthContextType {
@@ -10,7 +10,7 @@ interface AuthContextType {
   isGuestUser: boolean;
   isDriver: boolean;
   sendOtp: (phone: string) => Promise<{ message: string }>;
-  verifyOtp: (phone: string, otp: string) => Promise<void>;
+  verifyOtp: (phone: string, otp: string) => Promise<LoginResponse>;
   createPassword: (name: string) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -32,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!token) {
         // No token, skip API call entirely
         setUser(null);
+        setIsDriver(false);
         setIsLoading(false);
         return;
       }
@@ -54,10 +55,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await SecureStore.deleteItemAsync('access_token');
         await SecureStore.deleteItemAsync('refresh_token');
         setUser(null);
+        setIsDriver(false);
       }
     } catch (error: any) {
       // Silent fail - just continue without user
       setUser(null);
+      setIsDriver(false);
     } finally {
       setIsLoading(false);
     }
@@ -67,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return await authService.sendOtp(phone);
   };
 
-  const verifyOtp = async (phone: string, otp: string) => {
+  const verifyOtp = async (phone: string, otp: string): Promise<LoginResponse> => {
     const response = await authService.verifyOtp(phone, otp);
     await SecureStore.setItemAsync('access_token', response.accessToken);
     await SecureStore.setItemAsync('refresh_token', response.refreshToken);
@@ -78,6 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ? (response.user as any).roles.includes('DRIVER')
       : (response.user as any).role === 'DRIVER';
     setIsDriver(hasDriverRole);
+    return response;
   };
 
   const createPassword = async (name: string) => {

@@ -37,8 +37,7 @@
     "totalPrice": "Total Price",
     "viewOrderStatus": "View Order Status",
     "createAccount": "Create Account",
-    "createAccountPrompt": "Add a password to save your info and track orders",
-    "continueAsGuest": "Continue as Guest",
+    "createAccountPrompt": "Use your phone number to create an account and track orders",
     "signInToSave": "Sign in to save your info"
   },
   "orders": {
@@ -57,7 +56,11 @@
     "accountBenefits": "Benefits:",
     "benefit1": "Track your orders",
     "benefit2": "Faster checkout",
-    "benefit3": "Order history"
+    "benefit3": "Order history",
+    "completeProfile": "Complete your profile",
+    "addresses": "Addresses",
+    "addAddress": "Add address",
+    "noAddresses": "No saved addresses yet"
   },
   "driver": {
     "customer": "Customer",

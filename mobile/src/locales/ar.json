@@ -37,8 +37,7 @@
     "totalPrice": "السعر الإجمالي",
     "viewOrderStatus": "عرض حالة الطلب",
     "createAccount": "إنشاء حساب",
-    "createAccountPrompt": "أضف كلمة مرور لحفظ معلوماتك ومتابعة الطلبات",
-    "continueAsGuest": "المتابعة كضيف",
+    "createAccountPrompt": "استخدم رقم هاتفك لإنشاء حساب وتتبع طلباتك",
     "signInToSave": "سجل الدخول لحفظ معلوماتك"
   },
   "orders": {
@@ -57,7 +56,11 @@
     "accountBenefits": "المزايا:",
     "benefit1": "تتبع طلباتك",
     "benefit2": "دفع أسرع",
-    "benefit3": "سجل الطلبات"
+    "benefit3": "سجل الطلبات",
+    "completeProfile": "أكمل ملفك الشخصي",
+    "addresses": "العناوين",
+    "addAddress": "إضافة عنوان",
+    "noAddresses": "لا توجد عناوين محفوظة بعد"
   },
   "driver": {
     "customer": "العميل",

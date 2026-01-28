@@ -3,11 +3,13 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useI18n } from '../../context/I18nContext';
 import { LanguageToggle } from '../../components';
+import { orderService } from '../../services/orderService';
 
 export default function OrderQuantityScreen() {
   const { t } = useI18n();
   const navigation = useNavigation();
   const [quantity, setQuantity] = useState(1);
+  const [loading, setLoading] = useState(false);
 
   const handleDecrease = () => {
     if (quantity > 1) {
@@ -21,8 +23,23 @@ export default function OrderQuantityScreen() {
     }
   };
 
-  const handleContinue = () => {
-    navigation.navigate('Checkout' as never, { quantity } as never);
+  const handleContinue = async () => {
+    try {
+      setLoading(true);
+      // For now, assume backend uses the user's default address and payment method CASH
+      // If multiple addresses are available, we can add an address selection step later.
+      const createdOrder = await orderService.createOrder({
+        tankQuantity: quantity,
+        paymentMethod: 'CASH',
+      } as any);
+
+      navigation.navigate('Confirmation' as never, { order: createdOrder } as never);
+    } catch (error: any) {
+      console.error('Failed to create order:', error);
+      // You can improve error handling and localization here
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -52,8 +69,14 @@ export default function OrderQuantityScreen() {
 
       <Text style={styles.label}>{t('order.quantity')}</Text>
 
-      <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-        <Text style={styles.continueButtonText}>{t('order.continue')}</Text>
+      <TouchableOpacity
+        style={[styles.continueButton, loading && styles.continueButtonDisabled]}
+        onPress={handleContinue}
+        disabled={loading}
+      >
+        <Text style={styles.continueButtonText}>
+          {loading ? t('common.loading') : t('order.continue')}
+        </Text>
       </TouchableOpacity>
     </View>
   );

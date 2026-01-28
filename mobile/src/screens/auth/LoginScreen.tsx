@@ -52,7 +52,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await verifyOtp(phone, otp);
-      navigation.goBack(); // Close auth modal after successful login
+      // After successful OTP, AppNavigator will switch to the main app shell
     } catch (error: any) {
       Alert.alert('Login Failed', error.message || 'Invalid OTP');
     } finally {
@@ -60,15 +60,11 @@ export default function LoginScreen() {
     }
   };
 
-  const handleContinueAsGuest = () => {
-    navigation.goBack(); // Close auth modal and continue as guest
-  };
-
   return (
     <View style={styles.container}>
       <LanguageToggle />
       <Text style={styles.title}>{t('auth.login')}</Text>
-      
+
       <TextInput
         style={styles.input}
         placeholder="Phone (+962XXXXXXXXX)"
@@ -77,7 +73,7 @@ export default function LoginScreen() {
         keyboardType="phone-pad"
         editable={!otpSent}
       />
-      
+
       {otpSent && (
         <TextInput
           style={styles.input}
@@ -88,7 +84,7 @@ export default function LoginScreen() {
           maxLength={6}
         />
       )}
-      
+
       {!otpSent ? (
         <TouchableOpacity
           style={styles.button}
@@ -110,13 +106,14 @@ export default function LoginScreen() {
           </Text>
         </TouchableOpacity>
       )}
-      
+
       <TouchableOpacity
-        style={styles.guestButton}
-        onPress={handleContinueAsGuest}
+        style={styles.secondaryButton}
+        onPress={handleSendOtp}
+        disabled={loading || !phone || otpSent}
       >
-        <Text style={styles.guestButtonText}>
-          Continue as Guest
+        <Text style={styles.secondaryButtonText}>
+          {t('order.createAccount')}
         </Text>
       </TouchableOpacity>
     </View>
@@ -155,15 +152,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  guestButton: {
-    marginTop: 20,
-    padding: 15,
+  secondaryButton: {
+    marginTop: 16,
+    padding: 12,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#007AFF',
-    borderRadius: 8,
   },
-  guestButtonText: {
+  secondaryButtonText: {
     color: '#007AFF',
     fontSize: 16,
     fontWeight: '600',
