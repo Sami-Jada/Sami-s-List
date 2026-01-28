@@ -18,7 +18,6 @@ import {
 } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { CreateGuestOrderDto } from './dto/create-guest-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { AssignDriverDto } from './dto/assign-driver.dto';
 import { OrderFilterDto } from './dto/order-filter.dto';
@@ -34,15 +33,6 @@ import { Public } from '../auth/decorators/public.decorator';
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
-
-  @Public()
-  @Post('guest')
-  @ApiOperation({ summary: 'Create a guest order (no authentication required)' })
-  @ApiResponse({ status: 201, description: 'Guest order created successfully' })
-  @ApiResponse({ status: 400, description: 'Validation error or no vendor found' })
-  async createGuestOrder(@Body() createGuestOrderDto: CreateGuestOrderDto) {
-    return this.ordersService.createGuestOrder(createGuestOrderDto);
-  }
 
   @Roles('USER')
   @Post()

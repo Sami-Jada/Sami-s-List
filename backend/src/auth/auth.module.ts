@@ -11,6 +11,7 @@ import { RedisModule } from '../redis/redis.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { OtpService } from './services/otp.service';
 import { TokenService } from './services/token.service';
+import { SmsService } from './services/sms.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 
@@ -35,6 +36,7 @@ import { RolesGuard } from './guards/roles.guard';
   providers: [
     AuthService,
     OtpService,
+    SmsService,
     TokenService,
     JwtStrategy,
     {

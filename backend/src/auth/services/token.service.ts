@@ -223,32 +223,5 @@ export class TokenService {
     return this.redisService.exists(key);
   }
 
-  /**
-   * Generate temporary token for guest orders (1 hour expiry)
-   * Allows viewing order status without full authentication
-   */
-  async generateTemporaryToken(
-    userId: string,
-    phone: string,
-  ): Promise<string> {
-    // Get or create token version for user
-    const tokenVersion = await this.getTokenVersion(userId);
-
-    const payload: TokenPayload = {
-      sub: userId,
-      phone,
-      tokenVersion,
-    };
-
-    // Generate token with 1 hour expiry
-    const temporaryToken = this.jwtService.sign(payload, {
-      secret: this.jwtSecret,
-      expiresIn: '1h', // 1 hour for guest orders
-    });
-
-    this.logger.log(`Temporary token generated for guest user: ${userId} (${phone})`);
-
-    return temporaryToken;
-  }
 }
 

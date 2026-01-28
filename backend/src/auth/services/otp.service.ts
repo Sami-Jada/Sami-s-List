@@ -1,14 +1,22 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { RedisService } from '../../redis/redis.service';
 import * as bcrypt from 'bcrypt';
+import { SmsService } from './sms.service';
 
 @Injectable()
 export class OtpService {
   private readonly logger = new Logger(OtpService.name);
   private readonly OTP_EXPIRY_SECONDS =
     parseInt(process.env.OTP_EXPIRY_SECONDS || '300', 10); // Default 5 minutes
+  private readonly OTP_COOLDOWN_SECONDS =
+    parseInt(process.env.OTP_COOLDOWN_SECONDS || '60', 10); // Default 60 seconds between sends
+  private readonly OTP_DAILY_LIMIT =
+    parseInt(process.env.OTP_DAILY_LIMIT || '10', 10); // Default 10 OTPs per day per phone
 
-  constructor(private redisService: RedisService) {}
+  constructor(
+    private redisService: RedisService,
+    private smsService: SmsService,
+  ) {}
 
   /**
    * Generate a random 6-digit OTP code
@@ -18,11 +26,76 @@ export class OtpService {
   }
 
   /**
+   * Check if an OTP was sent recently (cooldown period)
+   * @param phone - Phone number
+   * @returns Remaining cooldown seconds, or 0 if no cooldown
+   */
+  private async getCooldownRemaining(phone: string): Promise<number> {
+    const cooldownKey = `otp_cooldown:${phone}`;
+    const ttl = await this.redisService.ttl(cooldownKey);
+    return ttl > 0 ? ttl : 0;
+  }
+
+  /**
+   * Check daily OTP limit for a phone number
+   * @param phone - Phone number
+   * @returns true if under limit, false if limit exceeded
+   */
+  private async checkDailyLimit(phone: string): Promise<boolean> {
+    const dailyKey = `otp_daily:${phone}:${new Date().toISOString().split('T')[0]}`;
+    const count = await this.redisService.get(dailyKey);
+    const currentCount = count ? parseInt(count, 10) : 0;
+    return currentCount < this.OTP_DAILY_LIMIT;
+  }
+
+  /**
+   * Increment daily OTP counter for a phone number
+   * @param phone - Phone number
+   */
+  private async incrementDailyCounter(phone: string): Promise<void> {
+    const dailyKey = `otp_daily:${phone}:${new Date().toISOString().split('T')[0]}`;
+    const newCount = await this.redisService.incr(dailyKey);
+    const secondsUntilMidnight = this.getSecondsUntilMidnight();
+    
+    // If this is a new key (count is 1), set the TTL
+    // Otherwise, the TTL should already be set, but we update it to be safe
+    await this.redisService.expire(dailyKey, secondsUntilMidnight);
+  }
+
+  /**
+   * Get seconds until midnight (for daily limit TTL)
+   */
+  private getSecondsUntilMidnight(): number {
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(24, 0, 0, 0);
+    return Math.floor((midnight.getTime() - now.getTime()) / 1000);
+  }
+
+  /**
    * Generate and store OTP for a phone number
    * @param phone - Phone number
    * @returns The generated OTP code (for logging/testing purposes)
+   * @throws BadRequestException if rate limit exceeded
    */
   async generateAndStoreOtp(phone: string): Promise<string> {
+    // Check cooldown period (minimum time between OTP sends)
+    const cooldownRemaining = await this.getCooldownRemaining(phone);
+    if (cooldownRemaining > 0) {
+      const minutes = Math.ceil(cooldownRemaining / 60);
+      throw new BadRequestException(
+        `Please wait ${minutes} minute${minutes > 1 ? 's' : ''} before requesting another OTP code.`,
+      );
+    }
+
+    // Check daily limit
+    const underDailyLimit = await this.checkDailyLimit(phone);
+    if (!underDailyLimit) {
+      throw new BadRequestException(
+        `Daily OTP limit of ${this.OTP_DAILY_LIMIT} requests exceeded. Please try again tomorrow.`,
+      );
+    }
+
     const otp = this.generateOtp();
     
     // Hash the OTP before storing (security best practice)
@@ -31,12 +104,20 @@ export class OtpService {
     // Store in Redis with phone as key
     const key = `otp:${phone}`;
     await this.redisService.set(key, hashedOtp, this.OTP_EXPIRY_SECONDS);
-    
-    // TODO: Integrate with Twilio or SMS provider to send OTP via SMS
-    // For now, log to console for development/testing
-    this.logger.log(`OTP for ${phone}: ${otp} (expires in ${this.OTP_EXPIRY_SECONDS}s)`);
-    this.logger.warn('SMS integration not implemented. OTP logged to console.');
-    
+
+    // Set cooldown period to prevent rapid-fire requests
+    const cooldownKey = `otp_cooldown:${phone}`;
+    await this.redisService.set(cooldownKey, '1', this.OTP_COOLDOWN_SECONDS);
+
+    // Increment daily counter
+    await this.incrementDailyCounter(phone);
+
+    // Send OTP via SMS (best-effort)
+    await this.smsService.sendOtpSms(phone, otp);
+    this.logger.log(
+      `OTP generated for ${phone} (expires in ${this.OTP_EXPIRY_SECONDS}s, cooldown: ${this.OTP_COOLDOWN_SECONDS}s)`,
+    );
+
     return otp;
   }
 

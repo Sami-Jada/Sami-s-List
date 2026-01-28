@@ -36,11 +36,16 @@ export class AuthController {
   @ApiBody({ type: SendOtpDto })
   async sendOtp(@Body() sendOtpDto: SendOtpDto, @Ip() ipAddress: string) {
     // Additional rate limiting by phone number (more restrictive than IP-based)
+    // This is a backup layer - OtpService also has cooldown and daily limits
     const phoneRateLimitKey = `rate_limit:send_otp:${sendOtpDto.phone}`;
     const phoneCount = await this.redisService.get(phoneRateLimitKey);
     
     if (phoneCount && parseInt(phoneCount, 10) >= 3) {
-      throw new BadRequestException('Too many OTP requests. Please try again in 15 minutes.');
+      const ttl = await this.redisService.ttl(phoneRateLimitKey);
+      const minutes = Math.ceil(ttl / 60);
+      throw new BadRequestException(
+        `Too many OTP requests. Please try again in ${minutes} minute${minutes > 1 ? 's' : ''}.`,
+      );
     }
 
     // Increment phone-based rate limit
@@ -67,7 +72,11 @@ export class AuthController {
     const phoneCount = await this.redisService.get(phoneRateLimitKey);
     
     if (phoneCount && parseInt(phoneCount, 10) >= 5) {
-      throw new BadRequestException('Too many verification attempts. Please try again in 15 minutes.');
+      const ttl = await this.redisService.ttl(phoneRateLimitKey);
+      const minutes = Math.ceil(ttl / 60);
+      throw new BadRequestException(
+        `Too many verification attempts. Please try again in ${minutes} minute${minutes > 1 ? 's' : ''}.`,
+      );
     }
 
     // Increment phone-based rate limit
