@@ -44,24 +44,55 @@ model Address {
   @@map("addresses")
 }
 
+model Service {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String?  @unique
+  iconName    String
+  isPopular   Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  vendorLinks VendorService[]
+
+  @@index([isPopular])
+  @@index([sortOrder])
+  @@map("services")
+}
+
+model VendorService {
+  id        String   @id @default(uuid())
+  vendorId  String
+  serviceId String
+  createdAt DateTime @default(now())
+  vendor    Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  service   Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([vendorId, serviceId])
+  @@index([vendorId])
+  @@index([serviceId])
+  @@map("vendor_services")
+}
+
 model Vendor {
-  id              String   @id @default(uuid())
+  id              String          @id @default(uuid())
   name            String
-  phone           String   @unique
+  phone           String          @unique
   businessLicense String?
   address         String
-  latitude        Decimal  @db.Decimal(10, 8)
-  longitude       Decimal  @db.Decimal(11, 8)
-  tankPrice       Decimal  @db.Decimal(10, 2)
-  serviceFee      Decimal  @db.Decimal(10, 2)
-  isActive        Boolean  @default(true)
-  rating          Float    @default(0)
-  totalOrders     Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  latitude        Decimal         @db.Decimal(10, 8)
+  longitude       Decimal         @db.Decimal(11, 8)
+  tankPrice       Decimal         @db.Decimal(10, 2)
+  serviceFee      Decimal         @db.Decimal(10, 2)
+  isActive        Boolean         @default(true)
+  rating          Float           @default(0)
+  totalOrders     Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
   drivers         Driver[]
   orders          Order[]
   ratings         Rating[]
+  serviceLinks    VendorService[]
 
   @@index([phone])
   @@index([latitude, longitude])

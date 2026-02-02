@@ -1,6 +1,7 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useAuth } from '../context/AuthContext';
+import { colors } from '../theme';
 import AuthNavigator from './AuthNavigator';
 import OnboardingNavigator from './OnboardingNavigator';
 import MainNavigator from './MainNavigator';
@@ -8,6 +9,7 @@ import OrderNavigator from './OrderNavigator';
 import DriverNavigator from './DriverNavigator';
 import AddressFormScreen from '../screens/main/AddressFormScreen';
 import AddressEditScreen from '../screens/main/AddressEditScreen';
+import OrdersScreen from '../screens/main/OrdersScreen';
 
 const Stack = createStackNavigator();
 
@@ -39,6 +41,17 @@ export default function AppNavigator() {
         name="Order"
         component={OrderNavigator}
         options={{ presentation: 'card' }}
+      />
+      <Stack.Screen
+        name="Orders"
+        component={OrdersScreen}
+        options={{
+          presentation: 'card',
+          headerShown: true,
+          title: 'Orders',
+          headerStyle: { backgroundColor: colors.card },
+          headerTintColor: colors.heading,
+        }}
       />
       <Stack.Screen
         name="AddressForm"

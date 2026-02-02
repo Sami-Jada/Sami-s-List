@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 import { LanguageToggle } from '../../components';
+import { colors } from '../../theme';
 
 export default function DriverProfileScreen() {
   const { user, logout } = useAuth();
@@ -40,43 +41,41 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
-    color: '#000',
+    color: colors.heading,
   },
   infoCard: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
     marginBottom: 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: colors.highlight,
     elevation: 3,
   },
   label: {
     fontSize: 14,
-    color: '#666',
+    color: colors.heading,
     marginTop: 10,
   },
   value: {
     fontSize: 16,
     marginTop: 5,
-    color: '#000',
+    color: colors.primaryText,
   },
   logoutButton: {
-    backgroundColor: '#FF3B30',
+    backgroundColor: colors.destructive,
     borderRadius: 8,
     padding: 15,
     alignItems: 'center',
   },
   logoutButtonText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 16,
     fontWeight: 'bold',
   },

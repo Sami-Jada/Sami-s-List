@@ -4,6 +4,7 @@ import DriverAssignedScreen from '../screens/driver/DriverAssignedScreen';
 import DriverActiveScreen from '../screens/driver/DriverActiveScreen';
 import DriverHistoryScreen from '../screens/driver/DriverHistoryScreen';
 import DriverProfileScreen from '../screens/driver/DriverProfileScreen';
+import { colors } from '../theme';
 
 export type DriverTabParamList = {
   DriverAssigned: undefined;
@@ -19,8 +20,11 @@ export default function DriverNavigator() {
     <Tab.Navigator
       screenOptions={{
         headerShown: true,
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: '#8E8E93',
+        headerStyle: { backgroundColor: colors.card },
+        headerTintColor: colors.heading,
+        tabBarActiveTintColor: colors.brand,
+        tabBarInactiveTintColor: colors.heading,
+        tabBarStyle: { backgroundColor: colors.card },
       }}
     >
       <Tab.Screen

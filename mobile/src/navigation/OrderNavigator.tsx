@@ -2,6 +2,7 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import OrderQuantityScreen from '../screens/order/OrderQuantityScreen';
 import OrderConfirmationScreen from '../screens/order/OrderConfirmationScreen';
+import { colors } from '../theme';
 
 export type OrderStackParamList = {
   Quantity: { quantity?: number };
@@ -16,6 +17,8 @@ export default function OrderNavigator() {
       screenOptions={{
         headerShown: true,
         headerBackTitleVisible: false,
+        headerStyle: { backgroundColor: colors.card },
+        headerTintColor: colors.heading,
       }}
     >
       <Stack.Screen

@@ -17,6 +17,7 @@ import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { LoggerModule } from './logger/logger.module';
+import { ServicesModule } from './services/services.module';
 
 @Module({
   imports: [
@@ -96,6 +97,7 @@ import { LoggerModule } from './logger/logger.module';
     PaymentsModule,
     NotificationsModule,
     LoggerModule,
+    ServicesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useI18n } from '../../context/I18nContext';
 import { useAuth } from '../../context/AuthContext';
 import { LanguageToggle } from '../../components';
+import { colors } from '../../theme';
 
 export default function SetPasswordScreen() {
   const [password, setPassword] = useState('');
@@ -93,6 +94,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 20,
+    backgroundColor: colors.background,
   },
   innerContainer: {
     padding: 20,
@@ -102,23 +104,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 8,
     textAlign: 'center',
+    color: colors.heading,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: colors.primaryText,
     textAlign: 'center',
     marginBottom: 24,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: colors.highlight,
     borderRadius: 8,
     padding: 12,
     marginBottom: 15,
     fontSize: 16,
+    color: colors.primaryText,
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.brand,
     borderRadius: 8,
     padding: 15,
     alignItems: 'center',
@@ -128,7 +132,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   buttonText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 16,
     fontWeight: 'bold',
   },

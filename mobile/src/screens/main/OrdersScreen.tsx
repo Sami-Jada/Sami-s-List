@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useI18n } from '../../context/I18nContext';
 import { LanguageToggle } from '../../components';
+import { colors } from '../../theme';
 
 export default function OrdersScreen() {
   const { t } = useI18n();
@@ -21,15 +22,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    backgroundColor: colors.background,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 10,
+    color: colors.heading,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: colors.primaryText,
   },
 });
 

@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useI18n } from '../../context/I18nContext';
 import { LanguageToggle } from '../../components';
 import { orderService } from '../../services/orderService';
+import { colors } from '../../theme';
 
 export default function OrderQuantityScreen() {
   const { t } = useI18n();
@@ -86,7 +87,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -95,6 +96,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 40,
     textAlign: 'center',
+    color: colors.heading,
   },
   quantityContainer: {
     flexDirection: 'row',
@@ -106,17 +108,17 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.brand,
     justifyContent: 'center',
     alignItems: 'center',
     marginHorizontal: 20,
   },
   buttonDisabled: {
-    backgroundColor: '#ccc',
+    backgroundColor: colors.highlight,
     opacity: 0.5,
   },
   buttonText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 28,
     fontWeight: 'bold',
   },
@@ -125,14 +127,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     minWidth: 80,
     textAlign: 'center',
+    color: colors.primaryText,
   },
   label: {
     fontSize: 18,
-    color: '#666',
+    color: colors.primaryText,
     marginBottom: 40,
   },
   continueButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.brand,
     borderRadius: 12,
     paddingVertical: 18,
     paddingHorizontal: 48,
@@ -140,7 +143,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   continueButtonText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 18,
     fontWeight: 'bold',
   },

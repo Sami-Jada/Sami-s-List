@@ -1,153 +1,245 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useAuth } from '../../context/AuthContext';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  useWindowDimensions,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useI18n } from '../../context/I18nContext';
 import { LanguageToggle } from '../../components';
+import { colors } from '../../theme';
+import { getPopularServices, ServiceCategory } from '../../services/servicesService';
+import Logo from '../../../assets/images/Logos/logo.svg';
+
+const CARD_SIZE = 120;
+const CARD_GAP = 12;
+
+function ServiceIcon({ iconName, size = 40 }: { iconName: string; size?: number }) {
+  const name = iconName.toLowerCase();
+  if (name === 'plumber') {
+    return <Text style={[styles.serviceIconText, { fontSize: size }]}>🔧</Text>;
+  }
+  if (name === 'house-cleaner') {
+    return <Text style={[styles.serviceIconText, { fontSize: size }]}>🏠</Text>;
+  }
+  if (name === 'lawn-care') {
+    return <Text style={[styles.serviceIconText, { fontSize: size }]}>🌿</Text>;
+  }
+  return <Text style={[styles.serviceIconText, { fontSize: size }]}>📋</Text>;
+}
 
 export default function HomeScreen() {
   const { t } = useI18n();
-  const { isAuthenticated } = useAuth();
-  const navigation = useNavigation();
+  const [services, setServices] = useState<ServiceCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const { width } = useWindowDimensions();
 
-  const handleOrderNow = () => {
-    // Navigate to order flow
-    navigation.navigate('Order' as never, { screen: 'Quantity' } as never);
-  };
-
-  const handleSignIn = () => {
-    navigation.navigate('Auth' as never, { screen: 'Login' } as never);
-  };
+  useEffect(() => {
+    let cancelled = false;
+    getPopularServices()
+      .then((data) => {
+        if (!cancelled) setServices(data);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setServices([
+            { id: '1', name: 'Plumber', slug: 'plumber', iconName: 'plumber', isPopular: true, sortOrder: 1 },
+            { id: '2', name: 'House Cleaner', slug: 'house-cleaner', iconName: 'house-cleaner', isPopular: true, sortOrder: 2 },
+            { id: '3', name: 'Lawn Care', slug: 'lawn-care', iconName: 'lawn-care', isPopular: true, sortOrder: 3 },
+          ]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.content}>
+    <View style={styles.screen}>
+      <SafeAreaView style={styles.safeArea} edges={[]}>
         <LanguageToggle />
-        <Text style={styles.title}>{t('home.welcome')}</Text>
-        <Text style={styles.subtitle}>{t('home.subtitle')}</Text>
-
-        {/* Primary CTA - Order Button */}
-        <TouchableOpacity style={styles.orderButton} onPress={handleOrderNow}>
-          <Text style={styles.orderButtonText}>{t('home.orderNow')}</Text>
-        </TouchableOpacity>
-
-        {/* Steps Info */}
-        <View style={styles.stepsContainer}>
-          <Text style={styles.stepsTitle}>{t('home.orderSteps')}</Text>
-          <View style={styles.step}>
-            <Text style={styles.stepNumber}>1</Text>
-            <Text style={styles.stepText}>{t('home.step1')}</Text>
-          </View>
-          <View style={styles.step}>
-            <Text style={styles.stepNumber}>2</Text>
-            <Text style={styles.stepText}>{t('home.step2')}</Text>
-          </View>
-          <View style={styles.step}>
-            <Text style={styles.stepNumber}>3</Text>
-            <Text style={styles.stepText}>{t('home.step3')}</Text>
-          </View>
+        {/* Header – dark background, logo only */}
+        <View style={styles.header}>
+          <Logo width={800} height={440} style={styles.logoGraphic} />
         </View>
 
-        {/* Secondary Action - Sign In */}
-        {!isAuthenticated && (
-          <TouchableOpacity style={styles.signInButton} onPress={handleSignIn}>
-            <Text style={styles.signInButtonText}>{t('auth.signIn')}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </ScrollView>
+        {/* Search bar */}
+        <View style={styles.searchWrap}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder={t('home.searchPlaceholder')}
+            placeholderTextColor={colors.heading}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+
+        {/* Main content – background color */}
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Popular Services */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>{t('home.popularServices')}</Text>
+              <TouchableOpacity hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                <Text style={styles.seeAll}>{t('home.seeAll')}</Text>
+              </TouchableOpacity>
+            </View>
+
+            {loading ? (
+              <View style={styles.loadingWrap}>
+                <ActivityIndicator size="small" color={colors.brand} />
+              </View>
+            ) : services.length === 0 ? (
+              <Text style={styles.noServices}>{t('home.noServices')}</Text>
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={[
+                  styles.cardsScroll,
+                  { paddingRight: Math.max(24, (width - (CARD_SIZE + CARD_GAP) * 3) / 2) },
+                ]}
+              >
+                {services.map((s) => (
+                  <TouchableOpacity
+                    key={s.id}
+                    style={styles.serviceCard}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.serviceIconWrap}>
+                      <ServiceIcon iconName={s.iconName} size={36} />
+                    </View>
+                    <Text style={styles.serviceLabel} numberOfLines={2}>
+                      {s.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: '#fff',
-  },
-  content: {
+  screen: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: colors.background,
+  },
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.primaryText,
+  },
+  header: {
+    backgroundColor: colors.primaryText,
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 0,
     alignItems: 'center',
-    padding: 24,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    textAlign: 'center',
-    color: '#000',
+  logoGraphic: {
+    opacity: 0.95,
   },
-  subtitle: {
-    fontSize: 18,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 40,
-  },
-  orderButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 12,
-    paddingVertical: 20,
-    paddingHorizontal: 40,
-    alignItems: 'center',
-    minWidth: 280,
-    marginBottom: 40,
-    shadowColor: '#007AFF',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  orderButtonText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  stepsContainer: {
-    width: '100%',
-    maxWidth: 320,
-    marginBottom: 30,
-  },
-  stepsTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 20,
-    textAlign: 'center',
-    color: '#333',
-  },
-  step: {
+  searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: colors.card,
+    marginHorizontal: 20,
+    marginTop: -80,
     marginBottom: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: colors.highlight,
+  },
+  searchIcon: {
+    fontSize: 18,
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: colors.primaryText,
+    paddingVertical: 0,
+  },
+  scroll: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  scrollContent: {
+    paddingTop: 24,
+    paddingBottom: 32,
+  },
+  section: {
     paddingHorizontal: 20,
   },
-  stepNumber: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#007AFF',
-    color: '#fff',
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    lineHeight: 32,
-    marginRight: 16,
-  },
-  stepText: {
-    fontSize: 16,
-    color: '#666',
-    flex: 1,
-  },
-  signInButton: {
-    marginTop: 20,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-  },
-  signInButtonText: {
-    color: '#007AFF',
-    fontSize: 16,
     fontWeight: '600',
+    color: colors.primaryText,
+  },
+  seeAll: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.brand,
+  },
+  loadingWrap: {
+    paddingVertical: 24,
+    alignItems: 'center',
+  },
+  noServices: {
+    fontSize: 15,
+    color: colors.heading,
+    paddingVertical: 24,
+  },
+  cardsScroll: {
+    flexDirection: 'row',
+    gap: CARD_GAP,
+    paddingLeft: 0,
+  },
+  serviceCard: {
+    width: CARD_SIZE,
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.highlight,
+  },
+  serviceIconWrap: {
+    marginBottom: 10,
+  },
+  serviceIconText: {
+    lineHeight: 40,
+  },
+  serviceLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.primaryText,
+    textAlign: 'center',
   },
 });
-
-
-

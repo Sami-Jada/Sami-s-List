@@ -17,6 +17,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useI18n } from '../../context/I18nContext';
 import { LanguageToggle } from '../../components';
 import { addressService, Address, AddressLabel } from '../../services/addressService';
+import { colors } from '../../theme';
 
 export default function AddressEditScreen() {
   const { t } = useI18n();
@@ -110,7 +111,7 @@ export default function AddressEditScreen() {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={colors.white} />
             ) : (
               <Text style={styles.saveButtonText}>{t('profile.saveAccount')}</Text>
             )}
@@ -128,19 +129,20 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 24,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
+    color: colors.heading,
   },
   fieldLabel: {
     fontSize: 16,
     fontWeight: '500',
     marginTop: 16,
     marginBottom: 8,
-    color: '#333',
+    color: colors.primaryText,
   },
   labelRow: {
     flexDirection: 'row',
@@ -151,32 +153,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: colors.highlight,
     marginRight: 8,
   },
   labelButtonActive: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    backgroundColor: colors.brand,
+    borderColor: colors.brand,
   },
   labelButtonText: {
     fontSize: 14,
-    color: '#333',
+    color: colors.primaryText,
   },
   labelButtonTextActive: {
-    color: '#fff',
+    color: colors.white,
     fontWeight: '600',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: colors.highlight,
     borderRadius: 8,
     padding: 16,
     fontSize: 16,
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     minHeight: 50,
+    color: colors.primaryText,
   },
   saveButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.brand,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
@@ -186,7 +189,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   saveButtonText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 16,
     fontWeight: 'bold',
   },

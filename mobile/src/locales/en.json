@@ -5,16 +5,23 @@
     "email": "Email",
     "password": "Password",
     "phone": "Phone",
-    "signIn": "Sign In"
+    "signIn": "Sign In",
+    "valueLine": "Fast delivery · Easy ordering · Track your orders",
+    "signInToContinue": "Enter your phone number below to get started",
+    "phonePlaceholder": "+962 7x xxx xxxx"
   },
   "home": {
     "welcome": "Welcome to Sami's List",
-    "subtitle": "Order your gas cylinders with ease",
+    "subtitle": "Find and hire trusted contractors for any job",
     "orderNow": "Order Gas Cylinder",
     "orderSteps": "Order in 3 simple steps",
     "step1": "Select quantity",
     "step2": "Enter your details",
-    "step3": "Get delivery"
+    "step3": "Get delivery",
+    "searchPlaceholder": "Search services...",
+    "popularServices": "Popular Services",
+    "seeAll": "See All",
+    "noServices": "No services available"
   },
   "order": {
     "quantity": "Quantity",

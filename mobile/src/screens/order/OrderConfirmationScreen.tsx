@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-nati
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useI18n } from '../../context/I18nContext';
 import { LanguageToggle } from '../../components';
+import { colors } from '../../theme';
 
 export default function OrderConfirmationScreen() {
   const { t } = useI18n();
@@ -75,20 +76,20 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 24,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
     alignItems: 'center',
   },
   successIcon: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#4CAF50',
+    backgroundColor: colors.brand,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
   },
   successIconText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 48,
     fontWeight: 'bold',
   },
@@ -97,13 +98,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 32,
     textAlign: 'center',
+    color: colors.heading,
   },
   orderInfo: {
     width: '100%',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 20,
     marginBottom: 24,
+    borderWidth: 1,
+    borderColor: colors.highlight,
   },
   infoRow: {
     flexDirection: 'row',
@@ -112,18 +116,18 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 16,
-    color: '#666',
+    color: colors.heading,
     flex: 1,
   },
   infoValue: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    color: colors.primaryText,
     flex: 1,
     textAlign: 'right',
   },
   viewOrderButton: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: colors.brand,
     borderRadius: 8,
     paddingVertical: 14,
     paddingHorizontal: 32,
@@ -131,7 +135,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   viewOrderButtonText: {
-    color: '#333',
+    color: colors.white,
     fontSize: 16,
     fontWeight: '600',
   },

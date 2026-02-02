@@ -14,6 +14,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 import { LanguageToggle } from '../../components';
+import { colors } from '../../theme';
 
 export default function RegisterScreen() {
   const [email, setEmail] = useState('');
@@ -81,6 +82,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
   },
   innerContainer: {
     flex: 1,
@@ -92,23 +94,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 30,
     textAlign: 'center',
+    color: colors.heading,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: colors.highlight,
     borderRadius: 8,
     padding: 12,
     marginBottom: 15,
     fontSize: 16,
+    color: colors.primaryText,
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.brand,
     borderRadius: 8,
     padding: 15,
     alignItems: 'center',
   },
   buttonText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 16,
     fontWeight: 'bold',
   },

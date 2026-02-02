@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl } f
 import { driverOrderService, DriverOrder } from '../../services/driverOrderService';
 import { useI18n } from '../../context/I18nContext';
 import { LanguageToggle } from '../../components';
+import { colors } from '../../theme';
 
 export default function DriverAssignedScreen() {
   const { t } = useI18n();
@@ -63,7 +64,7 @@ export default function DriverAssignedScreen() {
   if (loading && !refreshing) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color={colors.brand} />
       </View>
     );
   }
@@ -83,7 +84,7 @@ export default function DriverAssignedScreen() {
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#007AFF" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />
           }
         />
       )}
@@ -94,7 +95,7 @@ export default function DriverAssignedScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
   },
   listContent: {
     padding: 16,
@@ -107,23 +108,21 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#666',
+    color: colors.primaryText,
     textAlign: 'center',
   },
   errorText: {
-    color: '#FF3B30',
+    color: colors.destructive,
     padding: 12,
     textAlign: 'center',
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: colors.highlight,
     elevation: 3,
   },
   cardHeader: {
@@ -134,11 +133,11 @@ const styles = StyleSheet.create({
   orderNumber: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    color: colors.primaryText,
   },
   status: {
     fontSize: 14,
-    color: '#007AFF',
+    color: colors.brand,
     fontWeight: '500',
   },
   line: {
@@ -146,11 +145,11 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: '#666',
+    color: colors.heading,
   },
   value: {
     fontSize: 14,
-    color: '#000',
+    color: colors.primaryText,
   },
 });
 
