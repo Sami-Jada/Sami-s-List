@@ -15,6 +15,9 @@ import { AuthService } from './auth.service';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { CheckPhoneDto } from './dto/check-phone.dto';
+import { LoginDto } from './dto/login.dto';
+import { SetPasswordDto } from './dto/set-password.dto';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { RedisService } from '../redis/redis.service';
@@ -29,10 +32,39 @@ export class AuthController {
 
   @Public()
   @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 900000 } })
+  @Post('check-phone')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Check if phone exists (user or driver) for login branching' })
+  @ApiBody({ type: CheckPhoneDto })
+  async checkPhone(@Body() dto: CheckPhoneDto) {
+    return this.authService.checkPhone(dto.phone);
+  }
+
+  @Public()
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 900000 } })
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Password login for existing user or driver' })
+  @ApiBody({ type: LoginDto })
+  async login(
+    @Body() loginDto: LoginDto,
+    @Headers('x-device-id') deviceId?: string,
+  ) {
+    return this.authService.loginWithPassword(
+      loginDto.phone,
+      loginDto.password,
+      deviceId,
+    );
+  }
+
+  @Public()
+  @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 3, ttl: 900000 } }) // 3 requests per 15 minutes (900 seconds)
   @Post('send-otp')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Send OTP to phone number' })
+  @ApiOperation({ summary: 'Send OTP to phone number (new users only)' })
   @ApiBody({ type: SendOtpDto })
   async sendOtp(@Body() sendOtpDto: SendOtpDto, @Ip() ipAddress: string) {
     // Additional rate limiting by phone number (more restrictive than IP-based)
@@ -104,6 +136,19 @@ export class AuthController {
     @Body() refreshTokenDto?: RefreshTokenDto,
   ) {
     return this.authService.logout(user.userId, refreshTokenDto?.refreshToken);
+  }
+
+  @Post('set-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Set password (customers, after OTP onboarding)' })
+  @ApiBody({ type: SetPasswordDto })
+  async setPassword(
+    @CurrentUser() user: any,
+    @Body() dto: SetPasswordDto,
+  ) {
+    await this.authService.setPassword(user.userId, dto.password);
+    return { message: 'Password set successfully' };
   }
 
   @Post('me')

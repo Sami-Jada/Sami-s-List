@@ -2,6 +2,8 @@ import {
   IsString,
   IsNotEmpty,
   IsObject,
+  IsOptional,
+  MinLength,
   ValidateNested,
   Matches,
 } from 'class-validator';
@@ -60,6 +62,16 @@ export class CreateDriverDto {
     message: 'Phone number must be a valid Jordan number in format +962XXXXXXXXX',
   })
   phone: string;
+
+  @ApiProperty({
+    example: 'SecurePassword123',
+    required: false,
+    description: 'Initial password for driver login (optional)',
+  })
+  @IsString()
+  @IsOptional()
+  @MinLength(8, { message: 'Password must be at least 8 characters' })
+  password?: string;
 
   @ApiProperty({
     type: VehicleInfoDto,

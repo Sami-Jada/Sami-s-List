@@ -8,6 +8,10 @@ import {
   Alert,
   ScrollView,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useI18n } from '../../context/I18nContext';
@@ -111,6 +115,9 @@ export default function AddressFormScreen() {
 }
 
 const styles = StyleSheet.create({
+  keyboardContainer: {
+    flex: 1,
+  },
   container: {
     flexGrow: 1,
     padding: 24,

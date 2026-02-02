@@ -9,8 +9,11 @@ interface AuthContextType {
   isLoading: boolean;
   isGuestUser: boolean;
   isDriver: boolean;
+  checkPhone: (phone: string) => Promise<import('@shared').CheckPhoneResponse>;
+  loginWithPassword: (phone: string, password: string) => Promise<LoginResponse>;
   sendOtp: (phone: string) => Promise<{ message: string }>;
   verifyOtp: (phone: string, otp: string) => Promise<LoginResponse>;
+  setPassword: (password: string) => Promise<void>;
   createPassword: (name: string) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -45,9 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // For now, treat a specific role flag on the user as driver indicator if available
         // Fallback: you can later replace this with an explicit "role" field.
         // @ts-expect-error: role field may not yet be on User type
-        const hasDriverRole = Array.isArray((userData as any).roles)
-          ? (userData as any).roles.includes('DRIVER')
-          : (userData as any).role === 'DRIVER';
+        const hasDriverRole = (userData as User & { role?: string }).role === 'DRIVER';
         setIsDriver(hasDriverRole);
       } catch (error: any) {
         // Silently handle any errors - just clear token and continue as guest
@@ -66,6 +67,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const checkPhone = async (phone: string) => {
+    return await authService.checkPhone(phone);
+  };
+
+  const loginWithPassword = async (phone: string, password: string): Promise<LoginResponse> => {
+    const response = await authService.loginWithPassword(phone, password);
+    await SecureStore.setItemAsync('access_token', response.accessToken);
+    await SecureStore.setItemAsync('refresh_token', response.refreshToken);
+    setUser(response.user);
+    setIsDriver((response.user as User & { role?: string }).role === 'DRIVER');
+    return response;
+  };
+
   const sendOtp = async (phone: string) => {
     return await authService.sendOtp(phone);
   };
@@ -75,13 +89,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await SecureStore.setItemAsync('access_token', response.accessToken);
     await SecureStore.setItemAsync('refresh_token', response.refreshToken);
     setUser(response.user);
-    // Apply same role detection logic on login
-    // @ts-expect-error: role field may not yet be on User type
-    const hasDriverRole = Array.isArray((response.user as any).roles)
-      ? (response.user as any).roles.includes('DRIVER')
-      : (response.user as any).role === 'DRIVER';
-    setIsDriver(hasDriverRole);
+    setIsDriver((response.user as User & { role?: string }).role === 'DRIVER');
     return response;
+  };
+
+  const setPassword = async (password: string) => {
+    await authService.setPassword(password);
   };
 
   const createPassword = async (name: string) => {
@@ -113,8 +126,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         isGuestUser,
         isDriver,
+        checkPhone,
+        loginWithPassword,
         sendOtp,
         verifyOtp,
+        setPassword,
         createPassword,
         logout,
       }}

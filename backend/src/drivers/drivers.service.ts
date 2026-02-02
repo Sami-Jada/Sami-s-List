@@ -5,6 +5,7 @@ import {
   ForbiddenException,
   Logger,
 } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
@@ -191,7 +192,7 @@ export class DriversService {
       );
     }
 
-    // Check if phone already exists
+    // Check if phone already exists in drivers
     const existingDriver = await this.prisma.driver.findUnique({
       where: { phone: createDriverDto.phone },
     });
@@ -200,12 +201,32 @@ export class DriversService {
       throw new BadRequestException('Phone number already registered');
     }
 
+    let passwordHash: string | undefined;
+    if (createDriverDto.password) {
+      passwordHash = await bcrypt.hash(createDriverDto.password, 10);
+    }
+
     const driver = await this.prisma.driver.create({
       data: {
         vendorId: createDriverDto.vendorId,
         name: createDriverDto.name,
         phone: createDriverDto.phone,
         vehicleInfo: createDriverDto.vehicleInfo as any,
+        ...(passwordHash && { passwordHash }),
+      },
+    });
+
+    // Create or update User with same phone and role DRIVER (for JWT at login)
+    await this.prisma.user.upsert({
+      where: { phone: createDriverDto.phone },
+      create: {
+        phone: createDriverDto.phone,
+        name: createDriverDto.name,
+        role: 'DRIVER',
+      },
+      update: {
+        name: createDriverDto.name,
+        role: 'DRIVER',
       },
     });
 

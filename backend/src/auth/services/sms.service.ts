@@ -19,15 +19,15 @@ export class SmsService {
 
   /**
    * Send an OTP code via SMS using Vonage.
-   * This is a best-effort operation: on failure we log the error but do not
-   * expose the OTP code to logs in production.
+   * Returns true if SMS was sent successfully, false otherwise.
+   * On failure, logs the error but does not expose the OTP code to logs.
    */
-  async sendOtpSms(to: string, code: string): Promise<void> {
+  async sendOtpSms(to: string, code: string): Promise<boolean> {
     if (!this.isConfigured) {
       this.logger.warn(
         'Vonage SMS is not configured (missing VONAGE_API_KEY / VONAGE_API_SECRET / VONAGE_FROM). Skipping SMS send.',
       );
-      return;
+      return false;
     }
 
     const text = `Your Sami's List code is ${code}`;
@@ -56,29 +56,38 @@ export class SmsService {
           `Vonage SMS API HTTP error: ${response.status} ${response.statusText}`,
         );
         this.logger.debug(`Vonage response body: ${JSON.stringify(data)}`);
-        return;
+        return false;
       }
 
       if (!data || !Array.isArray(data.messages) || data.messages.length === 0) {
         this.logger.error('Vonage SMS API returned an unexpected response format');
         this.logger.debug(`Raw response: ${JSON.stringify(data)}`);
-        return;
+        return false;
       }
 
       const msg = data.messages[0];
       if (msg.status !== '0') {
+        const errorText = msg['error-text'] || 'Unknown error';
         this.logger.error(
-          `Vonage SMS send failed for ${to}: status=${msg.status}, error-text=${msg['error-text']}`,
+          `Vonage SMS send failed for ${to}: status=${msg.status}, error-text=${errorText}`,
         );
-        return;
+        // Log specific error for common issues
+        if (errorText.includes('same') || errorText.includes('sender') || msg.status === '15') {
+          this.logger.warn(
+            `Cannot send SMS to same number as sender. Use a different phone number for testing.`,
+          );
+        }
+        return false;
       }
 
       this.logger.log(`OTP SMS sent successfully to ${to}`);
+      return true;
     } catch (error: any) {
       this.logger.error(
         `Error sending OTP SMS via Vonage to ${to}: ${error?.message || 'Unknown error'}`,
         error?.stack,
       );
+      return false;
     }
   }
 }

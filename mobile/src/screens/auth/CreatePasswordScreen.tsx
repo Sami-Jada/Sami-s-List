@@ -8,6 +8,10 @@ import {
   Alert,
   ScrollView,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useI18n } from '../../context/I18nContext';
@@ -62,11 +66,9 @@ export default function CreatePasswordScreen() {
       });
 
       Alert.alert(t('common.success'), 'Account created successfully!', [
-        {
-          text: 'OK',
-          onPress: () => navigation.navigate('Main' as never, { screen: 'Home' } as never),
-        },
+        { text: 'OK' },
       ]);
+      // AppNavigator will show Main when isGuestUser becomes false (user updated above)
     } catch (error: any) {
       Alert.alert(t('common.error'), error.message || 'Failed to create account');
     } finally {
@@ -75,60 +77,70 @@ export default function CreatePasswordScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <LanguageToggle />
-      <Text style={styles.title}>{t('profile.createPassword')}</Text>
-      <Text style={styles.subtitle}>{t('order.createAccountPrompt')}</Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.keyboardContainer}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView contentContainerStyle={styles.container}>
+          <LanguageToggle />
+          <Text style={styles.title}>{t('profile.createPassword')}</Text>
+          <Text style={styles.subtitle}>{t('order.createAccountPrompt')}</Text>
 
-      <View style={styles.benefitsContainer}>
-        <Text style={styles.benefitsTitle}>{t('profile.accountBenefits')}</Text>
-        <Text style={styles.benefit}>• {t('profile.benefit1')}</Text>
-        <Text style={styles.benefit}>• {t('profile.benefit2')}</Text>
-        <Text style={styles.benefit}>• {t('profile.benefit3')}</Text>
-      </View>
+          <View style={styles.benefitsContainer}>
+            <Text style={styles.benefitsTitle}>{t('profile.accountBenefits')}</Text>
+            <Text style={styles.benefit}>• {t('profile.benefit1')}</Text>
+            <Text style={styles.benefit}>• {t('profile.benefit2')}</Text>
+            <Text style={styles.benefit}>• {t('profile.benefit3')}</Text>
+          </View>
 
-      <Text style={styles.label}>Your Name</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your full name"
-        value={name}
-        onChangeText={setName}
-        autoCapitalize="words"
-      />
+          <Text style={styles.label}>Your Name</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your full name"
+            value={name}
+            onChangeText={setName}
+            autoCapitalize="words"
+          />
 
-      <Text style={styles.label}>Address</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your full address"
-        value={addressLine}
-        onChangeText={setAddressLine}
-        multiline
-      />
+          <Text style={styles.label}>Address</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your full address"
+            value={addressLine}
+            onChangeText={setAddressLine}
+            multiline
+          />
 
-      <Text style={styles.label}>City</Text>
-      <TextInput
-        style={styles.input}
-        value={city}
-        onChangeText={setCity}
-        placeholder="Amman"
-      />
+          <Text style={styles.label}>City</Text>
+          <TextInput
+            style={styles.input}
+            value={city}
+            onChangeText={setCity}
+            placeholder="Amman"
+          />
 
-      <TouchableOpacity
-        style={[styles.saveButton, loading && styles.saveButtonDisabled]}
-        onPress={handleSaveAccount}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.saveButtonText}>{t('profile.saveAccount')}</Text>
-        )}
-      </TouchableOpacity>
-    </ScrollView>
+          <TouchableOpacity
+            style={[styles.saveButton, loading && styles.saveButtonDisabled]}
+            onPress={handleSaveAccount}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.saveButtonText}>{t('profile.saveAccount')}</Text>
+            )}
+          </TouchableOpacity>
+        </ScrollView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardContainer: {
+    flex: 1,
+  },
   container: {
     flexGrow: 1,
     padding: 24,

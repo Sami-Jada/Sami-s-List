@@ -4,11 +4,27 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { OtpService } from './services/otp.service';
 import { TokenService } from './services/token.service';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
+
+export interface CheckPhoneResult {
+  exists: boolean;
+  accountType?: 'user' | 'driver';
+  hasPassword: boolean;
+}
+
+export interface AuthUserPayload {
+  id: string;
+  phone: string;
+  name: string;
+  email?: string;
+  role: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -16,48 +32,137 @@ export class AuthService {
 
   constructor(
     private usersService: UsersService,
+    private prisma: PrismaService,
     private otpService: OtpService,
     private tokenService: TokenService,
   ) {}
 
   /**
-   * Send OTP to phone number
-   * Creates user if doesn't exist (registration flow)
+   * Check if phone exists in users or drivers (for login branching).
+   * Only send OTP for new phones; existing accounts use password.
+   */
+  async checkPhone(phone: string): Promise<CheckPhoneResult> {
+    const userWithAuth = await this.usersService.findByPhoneWithAuthInfo(phone);
+    if (userWithAuth) {
+      return {
+        exists: true,
+        accountType: 'user',
+        hasPassword: userWithAuth.hasPassword,
+      };
+    }
+    const driver = await this.prisma.driver.findUnique({
+      where: { phone },
+      select: { id: true, passwordHash: true },
+    } as { where: { phone: string }; select: { id: true; passwordHash: true } });
+    if (driver) {
+      const d = driver as { passwordHash?: string | null };
+      return {
+        exists: true,
+        accountType: 'driver',
+        hasPassword: !!d.passwordHash,
+      };
+    }
+    return { exists: false, hasPassword: false };
+  }
+
+  /**
+   * Password login for existing user or driver.
+   */
+  async loginWithPassword(
+    phone: string,
+    password: string,
+    deviceId?: string,
+  ): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    user: AuthUserPayload;
+  }> {
+    const userWithPassword = await this.usersService.findByPhoneWithPassword(phone);
+    const userPwdHash = userWithPassword && (userWithPassword as { passwordHash?: string | null }).passwordHash;
+    if (userPwdHash) {
+      const valid = await bcrypt.compare(password, userPwdHash);
+      if (!valid) {
+        this.logger.warn(`Invalid password attempt for user ${phone}`);
+        throw new UnauthorizedException('Invalid phone or password');
+      }
+      const user = userWithPassword!;
+      const { accessToken, refreshToken } = await this.tokenService.generateTokens(
+        user.id,
+        user.phone,
+        deviceId,
+      );
+      return {
+        accessToken,
+        refreshToken,
+        user: {
+          id: user.id,
+          phone: user.phone,
+          name: user.name,
+          email: user.email ?? undefined,
+          role: (user as { role?: string }).role ?? 'CUSTOMER',
+        },
+      };
+    }
+    const driver = await this.prisma.driver.findUnique({
+      where: { phone },
+      select: { id: true, name: true, phone: true, passwordHash: true },
+    } as { where: { phone: string }; select: { id: true; name: true; phone: true; passwordHash: true } });
+    const driverPwdHash = driver && (driver as { passwordHash?: string | null }).passwordHash;
+    if (driverPwdHash) {
+      const valid = await bcrypt.compare(password, driverPwdHash);
+      if (!valid) {
+        this.logger.warn(`Invalid password attempt for driver ${phone}`);
+        throw new UnauthorizedException('Invalid phone or password');
+      }
+      const linkedUser = await this.usersService.findByPhone(phone);
+      if (!linkedUser) {
+        this.logger.error(`Driver ${(driver as { id: string }).id} has no linked User for phone ${phone}`);
+        throw new UnauthorizedException('Account configuration error');
+      }
+      const { accessToken, refreshToken } = await this.tokenService.generateTokens(
+        linkedUser.id,
+        linkedUser.phone,
+        deviceId,
+      );
+      return {
+        accessToken,
+        refreshToken,
+        user: {
+          id: linkedUser.id,
+          phone: linkedUser.phone,
+          name: linkedUser.name,
+          email: linkedUser.email ?? undefined,
+          role: 'DRIVER',
+        },
+      };
+    }
+    throw new UnauthorizedException('Invalid phone or password');
+  }
+
+  /**
+   * Send OTP only when phone is not in users or drivers (new registration).
    */
   async sendOtp(sendOtpDto: SendOtpDto, ipAddress: string): Promise<{ message: string }> {
     const { phone } = sendOtpDto;
 
     try {
-      // Check if user exists, create if not (registration)
-      let user = await this.usersService.findByPhone(phone);
-      
-      if (!user) {
-        // Create new user with phone number
-        const newUser = await this.usersService.create({
-          phone,
-          name: '', // Name can be updated later
-        });
-        user = await this.usersService.findById(newUser.id);
-        this.logger.log(`New user created: ${user.id} (${phone})`);
+      const check = await this.checkPhone(phone);
+      if (check.exists && check.hasPassword) {
+        throw new BadRequestException('Account exists; sign in with password');
       }
 
-      // Generate and store OTP
       await this.otpService.generateAndStoreOtp(phone);
-
       this.logger.log(`OTP sent to ${phone} from IP: ${ipAddress}`);
-      
-      // Return generic message (don't reveal if user exists)
-      return {
-        message: 'OTP has been sent to your phone number',
-      };
+      return { message: 'OTP has been sent to your phone number' };
     } catch (error: any) {
+      if (error instanceof BadRequestException) throw error;
       this.logger.error(`Failed to send OTP to ${phone}: ${error?.message || 'Unknown error'}`, error?.stack);
       throw new BadRequestException('Failed to send OTP. Please try again.');
     }
   }
 
   /**
-   * Verify OTP and return tokens
+   * Verify OTP and return tokens. Creates user if not found (new registration).
    */
   async verifyOtp(
     verifyOtpDto: VerifyOtpDto,
@@ -66,48 +171,37 @@ export class AuthService {
   ): Promise<{
     accessToken: string;
     refreshToken: string;
-    user: {
-      id: string;
-      phone: string;
-      name: string;
-      email?: string;
-    };
+    user: AuthUserPayload;
     isGuest?: boolean;
+    isNewUser?: boolean;
   }> {
     const { phone, otp } = verifyOtpDto;
 
     try {
-      // Verify OTP
       const isValid = await this.otpService.verifyOtp(phone, otp);
-
       if (!isValid) {
         this.logger.warn(`Failed OTP verification attempt for ${phone} from IP: ${ipAddress}`);
         throw new UnauthorizedException('Invalid or expired OTP code');
       }
 
-      // Get or create user // To trigger a new deployment in railway
-      let user = await this.usersService.findByPhone(phone);
-      
-      if (!user) {
-        // This shouldn't happen if sendOtp was called first, but handle it
-        const newUser = await this.usersService.create({
-          phone,
-          name: '',
-        });
-        user = await this.usersService.findById(newUser.id);
+      let userInfo = await this.usersService.findByPhoneWithAuthInfo(phone);
+      let isNewUser = false;
+      if (!userInfo) {
+        await this.usersService.create({ phone, name: '' });
+        userInfo = await this.usersService.findByPhoneWithAuthInfo(phone);
+        if (!userInfo) throw new UnauthorizedException('User creation failed');
+        isNewUser = true;
+        this.logger.log(`New user created: ${userInfo.id} (${phone})`);
+      } else {
+        isNewUser = (userInfo.name === '' || !userInfo.name) && !userInfo.hasPassword;
       }
+      const { hasPassword: _, ...user } = userInfo;
 
-      // Check if this is a guest user (empty name) with existing orders
-      // If so, this is a conversion from guest to registered user
-      const isGuestUser = user.name === '';
-      
+      const isGuestUser = user.name === '' || !user.name;
       if (isGuestUser) {
         this.logger.log(`Guest user ${user.id} (${phone}) is signing up - will merge orders if any exist`);
-        // Note: Orders will be merged when user updates their name/profile
-        // For now, user remains as guest until they update their profile
       }
 
-      // Generate tokens
       const { accessToken, refreshToken } =
         await this.tokenService.generateTokens(user.id, user.phone, deviceId);
 
@@ -120,14 +214,14 @@ export class AuthService {
           id: user.id,
           phone: user.phone,
           name: user.name,
-          email: user.email || undefined,
+          email: user.email ?? undefined,
+          role: (user as { role?: string }).role ?? 'CUSTOMER',
         },
-        isGuest: isGuestUser, // Indicate if this is a guest user
+        isGuest: isGuestUser,
+        isNewUser,
       };
     } catch (error: any) {
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
+      if (error instanceof UnauthorizedException) throw error;
       this.logger.error(`OTP verification error for ${phone}: ${error?.message || 'Unknown error'}`, error?.stack);
       throw new UnauthorizedException('Invalid or expired OTP code');
     }
@@ -160,6 +254,13 @@ export class AuthService {
       this.logger.error(`Logout error for user ${userId}: ${error?.message || 'Unknown error'}`);
       throw new BadRequestException('Failed to logout');
     }
+  }
+
+  /**
+   * Set password for current user (customers only, after OTP onboarding).
+   */
+  async setPassword(userId: string, password: string) {
+    await this.usersService.setPassword(userId, password);
   }
 
   /**

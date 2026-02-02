@@ -8,12 +8,10 @@ export enum UserRole {
 
 export interface User {
   id: string;
-  email: string;
   phone: string;
-  firstName?: string;
-  lastName?: string;
-  role: UserRole;
-  isActive: boolean;
+  name: string;
+  email?: string;
+  role: UserRole | string;
   createdAt: string;
   updatedAt?: string;
 }
@@ -169,6 +167,12 @@ export interface ErrorResponse {
 }
 
 // Auth Types
+export interface CheckPhoneResponse {
+  exists: boolean;
+  accountType?: 'user' | 'driver';
+  hasPassword: boolean;
+}
+
 export interface LoginRequest {
   email: string;
   password: string;

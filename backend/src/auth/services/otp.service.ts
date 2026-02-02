@@ -99,7 +99,9 @@ export class OtpService {
     const otp = this.generateOtp();
     
     // Hash the OTP before storing (security best practice)
-    const hashedOtp = await bcrypt.hash(otp, 10);
+    // Using 8 rounds instead of 10 for OTP since it's short-lived (5 min expiry)
+    // This reduces CPU time by ~50-100ms per verify operation while still being secure
+    const hashedOtp = await bcrypt.hash(otp, 8);
     
     // Store in Redis with phone as key
     const key = `otp:${phone}`;
@@ -113,10 +115,16 @@ export class OtpService {
     await this.incrementDailyCounter(phone);
 
     // Send OTP via SMS (best-effort)
-    await this.smsService.sendOtpSms(phone, otp);
-    this.logger.log(
-      `OTP generated for ${phone} (expires in ${this.OTP_EXPIRY_SECONDS}s, cooldown: ${this.OTP_COOLDOWN_SECONDS}s)`,
-    );
+    const smsSent = await this.smsService.sendOtpSms(phone, otp);
+    if (!smsSent) {
+      this.logger.warn(
+        `OTP generated for ${phone} but SMS delivery failed. OTP is still valid for verification.`,
+      );
+    } else {
+      this.logger.log(
+        `OTP generated and SMS sent to ${phone} (expires in ${this.OTP_EXPIRY_SECONDS}s, cooldown: ${this.OTP_COOLDOWN_SECONDS}s)`,
+      );
+    }
 
     return otp;
   }

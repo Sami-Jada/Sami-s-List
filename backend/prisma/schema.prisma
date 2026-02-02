@@ -8,16 +8,18 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(uuid())
-  phone     String    @unique
-  name      String
-  email     String?   @unique
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  addresses Address[]
-  orders    Order[]
-  payments  Payment[]
-  ratings   Rating[]
+  id           String    @id @default(uuid())
+  phone        String    @unique
+  name         String
+  email        String?   @unique
+  passwordHash String?
+  role         String    @default("CUSTOMER")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  addresses    Address[]
+  orders       Order[]
+  payments     Payment[]
+  ratings      Rating[]
 
   @@index([phone])
   @@index([email])
@@ -72,6 +74,7 @@ model Driver {
   vendorId         String
   name             String
   phone            String   @unique
+  passwordHash     String?
   vehicleInfo      Json?
   currentLatitude  Decimal? @db.Decimal(10, 8)
   currentLongitude Decimal? @db.Decimal(11, 8)

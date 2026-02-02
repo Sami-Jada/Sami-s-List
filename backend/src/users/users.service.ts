@@ -5,6 +5,7 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -26,6 +27,7 @@ export class UsersService {
         name: true,
         email: true,
         phone: true,
+        role: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -49,10 +51,74 @@ export class UsersService {
         name: true,
         email: true,
         phone: true,
+        role: true,
         createdAt: true,
         updatedAt: true,
       },
     });
+  }
+
+  /**
+   * Find user by phone with auth info (hasPassword) for check-phone flow. Does not expose passwordHash.
+   */
+  async findByPhoneWithAuthInfo(phone: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { phone },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        passwordHash: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+    if (!user) return null;
+    const { passwordHash, ...rest } = user;
+    return { ...rest, hasPassword: !!passwordHash };
+  }
+
+  /**
+   * Find user by phone including passwordHash (for auth password login only). Returns null if not found.
+   */
+  async findByPhoneWithPassword(phone: string) {
+    return this.prisma.user.findUnique({
+      where: { phone },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        passwordHash: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+  /**
+   * Set password for a user (customers). Hashes and stores passwordHash.
+   */
+  async setPassword(userId: string, password: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, role: true },
+    });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+    if (user.role === 'DRIVER') {
+      throw new BadRequestException('Drivers set password via driver account');
+    }
+    const passwordHash = await bcrypt.hash(password, 10);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    });
+    this.logger.log(`Password set for user ${userId}`);
   }
 
   /**
@@ -80,12 +146,17 @@ export class UsersService {
     }
 
     const user = await this.prisma.user.create({
-      data: createUserDto,
+      data: {
+        phone: createUserDto.phone,
+        name: createUserDto.name ?? '',
+        email: createUserDto.email,
+      },
       select: {
         id: true,
         name: true,
         email: true,
         phone: true,
+        role: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -125,6 +196,7 @@ export class UsersService {
         name: true,
         email: true,
         phone: true,
+        role: true,
         updatedAt: true,
       },
     });

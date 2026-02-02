@@ -15,11 +15,12 @@ export class CreateUserDto {
 
   @ApiProperty({
     example: 'Ahmad Al-Mahmoud',
-    description: 'User full name',
+    description: 'User full name (optional for guest creation)',
+    required: false,
   })
   @IsString()
-  @IsNotEmpty()
-  name: string;
+  @IsOptional()
+  name?: string;
 
   @ApiProperty({
     example: 'ahmad@example.com',

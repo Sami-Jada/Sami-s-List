@@ -6,117 +6,174 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
-import { AuthStackParamList } from '../../navigation/AuthNavigator';
 import { LanguageToggle } from '../../components';
 
-type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Login'>;
+type Step = 'phone' | 'password' | 'otp';
 
 export default function LoginScreen() {
   const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
+  const [step, setStep] = useState<Step>('phone');
   const [loading, setLoading] = useState(false);
-  const { sendOtp, verifyOtp } = useAuth();
+  const { checkPhone, loginWithPassword, sendOtp, verifyOtp } = useAuth();
   const { t } = useI18n();
-  const navigation = useNavigation<LoginScreenNavigationProp>();
 
-  const handleSendOtp = async () => {
-    if (!phone) {
+  const handleContinue = async () => {
+    if (!phone.trim()) {
       Alert.alert('Error', 'Please enter your phone number');
       return;
     }
-
     setLoading(true);
     try {
-      await sendOtp(phone);
-      setOtpSent(true);
-      Alert.alert('Success', 'OTP sent to your phone');
+      const result = await checkPhone(phone.trim());
+      if (result.exists && result.hasPassword) {
+        setStep('password');
+      } else {
+        await sendOtp(phone.trim());
+        setStep('otp');
+        Alert.alert('Success', 'OTP sent to your phone');
+      }
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to send OTP');
+      const msg = error.response?.data?.message || error.message || 'Something went wrong';
+      Alert.alert('Error', msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordLogin = async () => {
+    if (!password) {
+      Alert.alert('Error', 'Please enter your password');
+      return;
+    }
+    setLoading(true);
+    try {
+      await loginWithPassword(phone.trim(), password);
+      // AppNavigator will switch to Main/Driver
+    } catch (error: any) {
+      const msg = error.response?.data?.message || error.message || 'Invalid phone or password';
+      Alert.alert('Login Failed', msg);
     } finally {
       setLoading(false);
     }
   };
 
   const handleVerifyOtp = async () => {
-    if (!otp) {
+    if (!otp.trim()) {
       Alert.alert('Error', 'Please enter the OTP code');
       return;
     }
-
     setLoading(true);
     try {
-      await verifyOtp(phone, otp);
-      // After successful OTP, AppNavigator will switch to the main app shell
+      await verifyOtp(phone.trim(), otp.trim());
+      // If isNewUser, AppNavigator shows onboarding; else Main
     } catch (error: any) {
-      Alert.alert('Login Failed', error.message || 'Invalid OTP');
+      const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout') || error.message?.includes('exceeded');
+      const isNetwork = error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND' || error.message?.includes('Network');
+      if (isTimeout || isNetwork) {
+        Alert.alert('Connection Error', 'Request timed out. Please check your connection and try again.');
+      } else if (error.response?.status === 401) {
+        Alert.alert('Login Failed', 'Invalid or expired OTP code. Please try again.');
+      } else {
+        Alert.alert('Login Failed', error.response?.data?.message || error.message || 'Invalid OTP');
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  const handleBack = () => {
+    if (step === 'password' || step === 'otp') {
+      setStep('phone');
+      setPassword('');
+      setOtp('');
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <LanguageToggle />
-      <Text style={styles.title}>{t('auth.login')}</Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.innerContainer}>
+          <LanguageToggle />
+          <Text style={styles.title}>{t('auth.login')}</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Phone (+962XXXXXXXXX)"
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
-        editable={!otpSent}
-      />
+          <TextInput
+            style={styles.input}
+            placeholder="Phone (+962XXXXXXXXX)"
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+            editable={step === 'phone'}
+          />
 
-      {otpSent && (
-        <TextInput
-          style={styles.input}
-          placeholder="Enter OTP"
-          value={otp}
-          onChangeText={setOtp}
-          keyboardType="number-pad"
-          maxLength={6}
-        />
-      )}
+          {step === 'password' && (
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
+              <TouchableOpacity
+                style={styles.button}
+                onPress={handlePasswordLogin}
+                disabled={loading}
+              >
+                <Text style={styles.buttonText}>{loading ? 'Signing in...' : 'Sign in'}</Text>
+              </TouchableOpacity>
+            </>
+          )}
 
-      {!otpSent ? (
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleSendOtp}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>
-            {loading ? 'Sending...' : 'Send OTP'}
-          </Text>
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleVerifyOtp}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>
-            {loading ? 'Verifying...' : 'Verify OTP'}
-          </Text>
-        </TouchableOpacity>
-      )}
+          {step === 'otp' && (
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter OTP"
+                value={otp}
+                onChangeText={setOtp}
+                keyboardType="number-pad"
+                maxLength={6}
+              />
+              <TouchableOpacity
+                style={styles.button}
+                onPress={handleVerifyOtp}
+                disabled={loading}
+              >
+                <Text style={styles.buttonText}>{loading ? 'Verifying...' : 'Verify OTP'}</Text>
+              </TouchableOpacity>
+            </>
+          )}
 
-      <TouchableOpacity
-        style={styles.secondaryButton}
-        onPress={handleSendOtp}
-        disabled={loading || !phone || otpSent}
-      >
-        <Text style={styles.secondaryButtonText}>
-          {t('order.createAccount')}
-        </Text>
-      </TouchableOpacity>
-    </View>
+          {step === 'phone' && (
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleContinue}
+              disabled={loading}
+            >
+              <Text style={styles.buttonText}>{loading ? 'Checking...' : 'Continue'}</Text>
+            </TouchableOpacity>
+          )}
+
+          {(step === 'password' || step === 'otp') && (
+            <TouchableOpacity style={styles.backButton} onPress={handleBack} disabled={loading}>
+              <Text style={styles.backButtonText}>Change phone number</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -124,6 +181,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
+    padding: 20,
+  },
+  innerContainer: {
     padding: 20,
   },
   title: {
@@ -147,20 +207,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
   },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
   buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
-  secondaryButton: {
+  backButton: {
     marginTop: 16,
-    padding: 12,
     alignItems: 'center',
   },
-  secondaryButtonText: {
+  backButtonText: {
     color: '#007AFF',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 14,
   },
 });
-

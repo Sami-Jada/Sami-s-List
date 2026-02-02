@@ -2,6 +2,7 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useAuth } from '../context/AuthContext';
 import AuthNavigator from './AuthNavigator';
+import OnboardingNavigator from './OnboardingNavigator';
 import MainNavigator from './MainNavigator';
 import OrderNavigator from './OrderNavigator';
 import DriverNavigator from './DriverNavigator';
@@ -11,21 +12,22 @@ import AddressEditScreen from '../screens/main/AddressEditScreen';
 const Stack = createStackNavigator();
 
 export default function AppNavigator() {
-  const { isAuthenticated, isLoading, isDriver } = useAuth();
+  const { isAuthenticated, isLoading, isDriver, isGuestUser } = useAuth();
 
   if (isLoading) {
-    // You can replace this with a proper splash/loading screen later
     return null;
   }
 
-  // If not authenticated, show the auth flow as the first screen.
   if (!isAuthenticated) {
     return <AuthNavigator />;
   }
 
-  // Otherwise, show the main app shell:
-  // - Driver accounts go to DriverNavigator
-  // - Everyone else (guest or regular user) goes to MainNavigator
+  // New users (guest, no name) must complete onboarding: set password then name + address
+  if (isGuestUser) {
+    return <OnboardingNavigator />;
+  }
+
+  // Driver accounts go to DriverNavigator; everyone else to MainNavigator
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {isDriver ? (

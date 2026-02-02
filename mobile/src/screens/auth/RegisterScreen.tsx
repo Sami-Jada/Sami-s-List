@@ -6,6 +6,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
@@ -76,6 +80,9 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  innerContainer: {
     flex: 1,
     justifyContent: 'center',
     padding: 20,

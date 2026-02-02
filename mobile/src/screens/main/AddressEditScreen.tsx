@@ -8,6 +8,10 @@ import {
   Alert,
   ScrollView,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useI18n } from '../../context/I18nContext';
@@ -67,50 +71,60 @@ export default function AddressEditScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <LanguageToggle />
-      <Text style={styles.title}>Edit address</Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.keyboardContainer}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView contentContainerStyle={styles.container}>
+          <LanguageToggle />
+          <Text style={styles.title}>Edit address</Text>
 
-      <Text style={styles.fieldLabel}>Label</Text>
-      <View style={styles.labelRow}>
-        {renderLabelButton('HOME', 'Home')}
-        {renderLabelButton('WORK', 'Work')}
-        {renderLabelButton('OTHER', 'Other')}
-      </View>
+          <Text style={styles.fieldLabel}>Label</Text>
+          <View style={styles.labelRow}>
+            {renderLabelButton('HOME', 'Home')}
+            {renderLabelButton('WORK', 'Work')}
+            {renderLabelButton('OTHER', 'Other')}
+          </View>
 
-      <Text style={styles.fieldLabel}>Address</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your full address"
-        value={addressLine}
-        onChangeText={setAddressLine}
-        multiline
-      />
+          <Text style={styles.fieldLabel}>Address</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your full address"
+            value={addressLine}
+            onChangeText={setAddressLine}
+            multiline
+          />
 
-      <Text style={styles.fieldLabel}>City</Text>
-      <TextInput
-        style={styles.input}
-        value={city}
-        onChangeText={setCity}
-        placeholder="Amman"
-      />
+          <Text style={styles.fieldLabel}>City</Text>
+          <TextInput
+            style={styles.input}
+            value={city}
+            onChangeText={setCity}
+            placeholder="Amman"
+          />
 
-      <TouchableOpacity
-        style={[styles.saveButton, loading && styles.saveButtonDisabled]}
-        onPress={handleSave}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.saveButtonText}>{t('profile.saveAccount')}</Text>
-        )}
-      </TouchableOpacity>
-    </ScrollView>
+          <TouchableOpacity
+            style={[styles.saveButton, loading && styles.saveButtonDisabled]}
+            onPress={handleSave}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.saveButtonText}>{t('profile.saveAccount')}</Text>
+            )}
+          </TouchableOpacity>
+        </ScrollView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardContainer: {
+    flex: 1,
+  },
   container: {
     flexGrow: 1,
     padding: 24,
