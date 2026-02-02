@@ -93,6 +93,9 @@ export default function ProfileScreen() {
           )}
 
           <View style={styles.userInfo}>
+            {user.name ? (
+              <Text style={styles.userName}>{user.name}</Text>
+            ) : null}
             <Text style={styles.label}>{t('profile.phone')}</Text>
             <Text style={styles.value}>{user.phone}</Text>
             {user.email && (
@@ -190,24 +193,10 @@ export default function ProfileScreen() {
                     {displayOrder.address.addressLine}, {displayOrder.address.city}
                   </Text>
                 )}
-                <TouchableOpacity
-                  style={styles.ordersCardArrowRow}
-                  onPress={() => navigation.navigate('Orders' as never)}
-                >
-                  <Text style={styles.ordersCardArrowText}>{t('order.viewOrderStatus')}</Text>
-                  <Text style={styles.ordersCardArrow}>›</Text>
-                </TouchableOpacity>
               </View>
             ) : (
               <View style={styles.ordersCard}>
                 <Text style={styles.ordersEmptyText}>{t('orders.empty')}</Text>
-                <TouchableOpacity
-                  style={styles.ordersCardArrowRow}
-                  onPress={() => navigation.navigate('Orders' as never)}
-                >
-                  <Text style={styles.ordersCardArrowText}>{t('orders.title')}</Text>
-                  <Text style={styles.ordersCardArrow}>›</Text>
-                </TouchableOpacity>
               </View>
             )}
           </View>
@@ -266,6 +255,12 @@ const styles = StyleSheet.create({
   userInfo: {
     marginBottom: 24,
   },
+  userName: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.heading,
+    marginBottom: 4,
+  },
   label: {
     fontSize: 14,
     color: colors.heading,
@@ -308,6 +303,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginTop: 8,
     backgroundColor: colors.card,
+    minHeight: 100,
   },
   ordersCardRow: {
     flexDirection: 'row',
@@ -328,26 +324,6 @@ const styles = StyleSheet.create({
     color: colors.primaryText,
     marginTop: 4,
     marginBottom: 8,
-  },
-  ordersCardArrowRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: colors.highlight,
-  },
-  ordersCardArrowText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.brand,
-    marginRight: 4,
-  },
-  ordersCardArrow: {
-    fontSize: 18,
-    color: colors.brand,
-    fontWeight: '300',
   },
   ordersEmptyText: {
     fontSize: 14,
@@ -388,6 +364,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginTop: 8,
     backgroundColor: colors.card,
+    minHeight: 100,
   },
   addressHeaderRow: {
     flexDirection: 'row',

@@ -37,47 +37,6 @@ async function main() {
   });
   console.log(`✅ Created vendor: ${vendor.name}`);
 
-  // Create service categories (Popular Services)
-  console.log('🔧 Creating service categories...');
-  const plumber = await prisma.service.create({
-    data: {
-      name: 'Plumber',
-      slug: 'plumber',
-      iconName: 'plumber',
-      isPopular: true,
-      sortOrder: 1,
-    },
-  });
-  const houseCleaner = await prisma.service.create({
-    data: {
-      name: 'House Cleaner',
-      slug: 'house-cleaner',
-      iconName: 'house-cleaner',
-      isPopular: true,
-      sortOrder: 2,
-    },
-  });
-  const lawnCare = await prisma.service.create({
-    data: {
-      name: 'Lawn Care',
-      slug: 'lawn-care',
-      iconName: 'lawn-care',
-      isPopular: true,
-      sortOrder: 3,
-    },
-  });
-  console.log(`✅ Created services: ${plumber.name}, ${houseCleaner.name}, ${lawnCare.name}`);
-
-  // Optionally link vendor to services (e.g. vendor offers these categories)
-  await prisma.vendorService.createMany({
-    data: [
-      { vendorId: vendor.id, serviceId: plumber.id },
-      { vendorId: vendor.id, serviceId: houseCleaner.id },
-      { vendorId: vendor.id, serviceId: lawnCare.id },
-    ],
-  });
-  console.log('✅ Linked vendor to service categories');
-
   // Create 2 Drivers
   console.log('🚗 Creating drivers...');
   const driver1 = await prisma.driver.create({

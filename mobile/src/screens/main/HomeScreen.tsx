@@ -44,16 +44,10 @@ export default function HomeScreen() {
     let cancelled = false;
     getPopularServices()
       .then((data) => {
-        if (!cancelled) setServices(data);
+        if (!cancelled) setServices(data ?? []);
       })
       .catch(() => {
-        if (!cancelled) {
-          setServices([
-            { id: '1', name: 'Plumber', slug: 'plumber', iconName: 'plumber', isPopular: true, sortOrder: 1 },
-            { id: '2', name: 'House Cleaner', slug: 'house-cleaner', iconName: 'house-cleaner', isPopular: true, sortOrder: 2 },
-            { id: '3', name: 'Lawn Care', slug: 'lawn-care', iconName: 'lawn-care', isPopular: true, sortOrder: 3 },
-          ]);
-        }
+        if (!cancelled) setServices([]);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
