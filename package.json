@@ -18,6 +18,7 @@
     "build:mobile": "npm run build --workspace=mobile",
     "build:admin": "npm run build --workspace=admin",
     "install:all": "npm install",
+    "sync-lockfile": "npm install",
     "lint": "npm run lint --workspaces",
     "test": "npm run test --workspaces",
     "prepare": "husky install"

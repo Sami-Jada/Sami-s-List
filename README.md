@@ -134,6 +134,16 @@ To manually run the hooks:
 npm run prepare
 ```
 
+## Railway / Vercel deploy (monorepo)
+
+If **Railway** backend deploy fails with `Missing: @samis-list/admin@1.0.0 from lock file` (or similar), the root lock file is out of sync with workspaces. From the **repository root** run:
+
+```bash
+npm run sync-lockfile
+```
+
+Then commit and push the updated `package-lock.json`. Redeploy on Railway.
+
 ## Development
 
 ### Running Backend
