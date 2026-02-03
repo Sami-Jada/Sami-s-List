@@ -2,7 +2,7 @@
 export enum UserRole {
   USER = 'USER',
   VENDOR = 'VENDOR',
-  DRIVER = 'DRIVER',
+  SERVICE_PROVIDER = 'SERVICE_PROVIDER',
   ADMIN = 'ADMIN',
 }
 
@@ -32,20 +32,26 @@ export interface Order {
   id: string;
   userId: string;
   vendorId?: string;
-  driverId?: string;
+  serviceProviderId?: string;
   addressId: string;
   status: OrderStatus;
-  cylinderType: string;
+  cylinderType?: string;
   quantity: number;
+  /** Snapshot unit price at order time (gas = per cylinder, etc.) */
+  unitPrice?: number | string;
+  /** Snapshot service fee at order time */
+  serviceFee?: number | string;
+  /** Total order amount; may be returned as totalPrice from API */
   totalAmount: number;
+  totalPrice?: number | string;
   notes?: string;
   scheduledAt?: string;
-  deliveredAt?: string;
+  completedAt?: string;
   createdAt: string;
   updatedAt?: string;
   user?: User;
   vendor?: Vendor;
-  driver?: Driver;
+  serviceProvider?: ServiceProvider;
   address?: Address;
   payment?: Payment;
 }
@@ -63,19 +69,23 @@ export interface Vendor {
   user?: User;
 }
 
-// Driver Types
-export interface Driver {
+// Service Provider (technician or delivery person)
+export interface ServiceProvider {
   id: string;
-  userId: string;
   vendorId: string;
-  licenseNumber?: string;
-  vehicleInfo?: string;
-  isActive: boolean;
+  name: string;
+  phone: string;
+  extraInfo?: Record<string, unknown>;
+  isAvailable: boolean;
+  rating: number;
+  totalJobs: number;
   createdAt: string;
   updatedAt?: string;
-  user?: User;
   vendor?: Vendor;
 }
+
+/** @deprecated Use ServiceProvider */
+export type Driver = ServiceProvider;
 
 // Address Types
 export interface Address {
@@ -169,7 +179,7 @@ export interface ErrorResponse {
 // Auth Types
 export interface CheckPhoneResponse {
   exists: boolean;
-  accountType?: 'user' | 'driver';
+  accountType?: 'user' | 'service_provider';
   hasPassword: boolean;
 }
 

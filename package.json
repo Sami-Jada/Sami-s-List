@@ -6,14 +6,17 @@
   "workspaces": [
     "backend",
     "mobile",
-    "shared"
+    "shared",
+    "admin"
   ],
   "scripts": {
     "dev:backend": "npm run dev --workspace=backend",
     "dev:mobile": "npm run start --workspace=mobile",
+    "dev:admin": "npm run dev --workspace=admin",
     "build:shared": "npm run build --workspace=shared",
     "build:backend": "npm run build:shared && npm run build --workspace=backend",
     "build:mobile": "npm run build --workspace=mobile",
+    "build:admin": "npm run build --workspace=admin",
     "install:all": "npm install",
     "lint": "npm run lint --workspaces",
     "test": "npm run test --workspaces",

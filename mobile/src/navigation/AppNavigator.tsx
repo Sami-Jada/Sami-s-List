@@ -14,7 +14,7 @@ import OrdersScreen from '../screens/main/OrdersScreen';
 const Stack = createStackNavigator();
 
 export default function AppNavigator() {
-  const { isAuthenticated, isLoading, isDriver, isGuestUser } = useAuth();
+  const { isAuthenticated, isLoading, isServiceProvider, isGuestUser } = useAuth();
 
   if (isLoading) {
     return null;
@@ -29,10 +29,10 @@ export default function AppNavigator() {
     return <OnboardingNavigator />;
   }
 
-  // Driver accounts go to DriverNavigator; everyone else to MainNavigator
+  // Service provider accounts go to DriverNavigator; everyone else to MainNavigator
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {isDriver ? (
+      {isServiceProvider ? (
         <Stack.Screen name="DriverMain" component={DriverNavigator} />
       ) : (
         <Stack.Screen name="Main" component={MainNavigator} />

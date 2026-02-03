@@ -19,7 +19,7 @@ import {
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
-import { AssignDriverDto } from './dto/assign-driver.dto';
+import { AssignServiceProviderDto } from './dto/assign-service-provider.dto';
 import { OrderFilterDto } from './dto/order-filter.dto';
 import { CancelOrderDto } from './dto/cancel-order.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -56,31 +56,30 @@ export class OrdersController {
     @Query() filters: OrderFilterDto,
     @CurrentUser() user: any,
   ) {
-    // TODO: Get user role from JWT payload when roles are implemented
-    return this.ordersService.findAll(filters, user.userId, 'USER');
+    return this.ordersService.findAll(filters, user.userId, user.role ?? 'USER');
   }
 
-  @Roles('DRIVER', 'ADMIN')
+  @Roles('SERVICE_PROVIDER', 'ADMIN')
   @Get('driver/assigned')
-  @ApiOperation({ summary: 'Get assigned orders for current driver' })
+  @ApiOperation({ summary: 'Get assigned orders for current service provider' })
   @ApiResponse({ status: 200, description: 'List of assigned orders' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getDriverAssigned(@CurrentUser() user: any) {
     return this.ordersService.findAssignedForDriver(user.userId);
   }
 
-  @Roles('DRIVER', 'ADMIN')
+  @Roles('SERVICE_PROVIDER', 'ADMIN')
   @Get('driver/active')
-  @ApiOperation({ summary: 'Get active orders for current driver (ASSIGNED, EN_ROUTE)' })
+  @ApiOperation({ summary: 'Get active orders for current service provider (ASSIGNED, EN_ROUTE)' })
   @ApiResponse({ status: 200, description: 'List of active orders' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getDriverActive(@CurrentUser() user: any) {
     return this.ordersService.findActiveForDriver(user.userId);
   }
 
-  @Roles('DRIVER', 'ADMIN')
+  @Roles('SERVICE_PROVIDER', 'ADMIN')
   @Get('driver/history')
-  @ApiOperation({ summary: 'Get order history for current driver (DELIVERED, COMPLETED)' })
+  @ApiOperation({ summary: 'Get order history for current service provider (DELIVERED, COMPLETED)' })
   @ApiResponse({ status: 200, description: 'List of historical orders' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getDriverHistory(@CurrentUser() user: any) {
@@ -110,7 +109,7 @@ export class OrdersController {
     return this.ordersService.findById(id, user.userId, 'USER');
   }
 
-  @Roles('VENDOR', 'DRIVER', 'ADMIN')
+  @Roles('VENDOR', 'SERVICE_PROVIDER', 'ADMIN')
   @Patch(':id/status')
   @ApiOperation({ summary: 'Update order status (vendor/driver/admin)' })
   @ApiParam({ name: 'id', description: 'Order ID' })
@@ -133,18 +132,18 @@ export class OrdersController {
 
   @Roles('VENDOR', 'ADMIN')
   @Put(':id/assign-driver')
-  @ApiOperation({ summary: 'Assign driver to order (vendor/admin)' })
+  @ApiOperation({ summary: 'Assign service provider to order (vendor/admin)' })
   @ApiParam({ name: 'id', description: 'Order ID' })
-  @ApiResponse({ status: 200, description: 'Driver assigned successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid order status or driver not available' })
+  @ApiResponse({ status: 200, description: 'Service provider assigned successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid order status or service provider not available' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 404, description: 'Order or driver not found' })
+  @ApiResponse({ status: 404, description: 'Order or service provider not found' })
   async assignDriver(
     @Param('id') id: string,
-    @Body() assignDriverDto: AssignDriverDto,
+    @Body() assignDto: AssignServiceProviderDto,
   ) {
-    return this.ordersService.assignDriver(id, assignDriverDto);
+    return this.ordersService.assignDriver(id, assignDto);
   }
 
   @Put(':id/cancel')
@@ -165,9 +164,9 @@ export class OrdersController {
     return this.ordersService.cancelOrder(id, cancelDto);
   }
 
-  @Roles('DRIVER', 'ADMIN')
+  @Roles('SERVICE_PROVIDER', 'ADMIN')
   @Put(':id/complete')
-  @ApiOperation({ summary: 'Complete order after delivery (driver/admin)' })
+  @ApiOperation({ summary: 'Complete order after delivery (service provider/admin)' })
   @ApiParam({ name: 'id', description: 'Order ID' })
   @ApiResponse({ status: 200, description: 'Order completed successfully' })
   @ApiResponse({ status: 400, description: 'Order must be in DELIVERED status' })

@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export enum CancelledBy {
   USER = 'user',
   VENDOR = 'vendor',
-  DRIVER = 'driver',
+  SERVICE_PROVIDER = 'service_provider',
 }
 
 export class CancelOrderDto {

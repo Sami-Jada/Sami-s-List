@@ -46,7 +46,7 @@ export default function DriverAssignedScreen() {
       </Text>
       <Text style={styles.line}>
         <Text style={styles.label}>{t('driver.quantity')}:</Text>{' '}
-        <Text style={styles.value}>{item.tankQuantity}</Text>
+        <Text style={styles.value}>{item.quantity}</Text>
       </Text>
       <Text style={styles.line}>
         <Text style={styles.label}>{t('driver.address')}:</Text>{' '}

@@ -14,7 +14,7 @@ import { VerifyOtpDto } from './dto/verify-otp.dto';
 
 export interface CheckPhoneResult {
   exists: boolean;
-  accountType?: 'user' | 'driver';
+  accountType?: 'user' | 'service_provider';
   hasPassword: boolean;
 }
 
@@ -38,7 +38,7 @@ export class AuthService {
   ) {}
 
   /**
-   * Check if phone exists in users or drivers (for login branching).
+   * Check if phone exists in users or service providers (for login branching).
    * Only send OTP for new phones; existing accounts use password.
    */
   async checkPhone(phone: string): Promise<CheckPhoneResult> {
@@ -50,23 +50,67 @@ export class AuthService {
         hasPassword: userWithAuth.hasPassword,
       };
     }
-    const driver = await this.prisma.driver.findUnique({
+    const serviceProvider = await this.prisma.serviceProvider.findUnique({
       where: { phone },
       select: { id: true, passwordHash: true },
-    } as { where: { phone: string }; select: { id: true; passwordHash: true } });
-    if (driver) {
-      const d = driver as { passwordHash?: string | null };
+    });
+    if (serviceProvider) {
       return {
         exists: true,
-        accountType: 'driver',
-        hasPassword: !!d.passwordHash,
+        accountType: 'service_provider',
+        hasPassword: !!serviceProvider.passwordHash,
       };
     }
     return { exists: false, hasPassword: false };
   }
 
   /**
-   * Password login for existing user or driver.
+   * Admin panel login: username + password only. User must have role ADMIN.
+   */
+  async adminLogin(
+    username: string,
+    password: string,
+    deviceId?: string,
+  ): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    user: AuthUserPayload;
+  }> {
+    const user = await this.usersService.findByUsernameWithPassword(username);
+    if (!user?.passwordHash) {
+      this.logger.warn(`Admin login attempt for unknown or no-password user: ${username}`);
+      throw new UnauthorizedException('Invalid username or password');
+    }
+    if (user.role !== 'ADMIN') {
+      this.logger.warn(`Admin login attempted for non-admin user: ${username}`);
+      throw new UnauthorizedException('Invalid username or password');
+    }
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid) {
+      this.logger.warn(`Invalid admin password attempt for ${username}`);
+      throw new UnauthorizedException('Invalid username or password');
+    }
+    const { accessToken, refreshToken } = await this.tokenService.generateTokens(
+      user.id,
+      user.phone,
+      deviceId,
+      'ADMIN',
+    );
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        phone: user.phone,
+        name: user.name,
+        email: user.email ?? undefined,
+        role: 'ADMIN',
+      },
+    };
+  }
+
+  /**
+   * Password login for existing user or service provider.
    */
   async loginWithPassword(
     phone: string,
@@ -86,10 +130,12 @@ export class AuthService {
         throw new UnauthorizedException('Invalid phone or password');
       }
       const user = userWithPassword!;
+      const role = (user as { role?: string }).role ?? 'CUSTOMER';
       const { accessToken, refreshToken } = await this.tokenService.generateTokens(
         user.id,
         user.phone,
         deviceId,
+        role,
       );
       return {
         accessToken,
@@ -99,30 +145,30 @@ export class AuthService {
           phone: user.phone,
           name: user.name,
           email: user.email ?? undefined,
-          role: (user as { role?: string }).role ?? 'CUSTOMER',
+          role,
         },
       };
     }
-    const driver = await this.prisma.driver.findUnique({
+    const serviceProvider = await this.prisma.serviceProvider.findUnique({
       where: { phone },
       select: { id: true, name: true, phone: true, passwordHash: true },
-    } as { where: { phone: string }; select: { id: true; name: true; phone: true; passwordHash: true } });
-    const driverPwdHash = driver && (driver as { passwordHash?: string | null }).passwordHash;
-    if (driverPwdHash) {
-      const valid = await bcrypt.compare(password, driverPwdHash);
+    });
+    if (serviceProvider?.passwordHash) {
+      const valid = await bcrypt.compare(password, serviceProvider.passwordHash);
       if (!valid) {
-        this.logger.warn(`Invalid password attempt for driver ${phone}`);
+        this.logger.warn(`Invalid password attempt for service provider ${phone}`);
         throw new UnauthorizedException('Invalid phone or password');
       }
       const linkedUser = await this.usersService.findByPhone(phone);
       if (!linkedUser) {
-        this.logger.error(`Driver ${(driver as { id: string }).id} has no linked User for phone ${phone}`);
+        this.logger.error(`Service provider ${serviceProvider.id} has no linked User for phone ${phone}`);
         throw new UnauthorizedException('Account configuration error');
       }
       const { accessToken, refreshToken } = await this.tokenService.generateTokens(
         linkedUser.id,
         linkedUser.phone,
         deviceId,
+        'SERVICE_PROVIDER',
       );
       return {
         accessToken,
@@ -132,7 +178,7 @@ export class AuthService {
           phone: linkedUser.phone,
           name: linkedUser.name,
           email: linkedUser.email ?? undefined,
-          role: 'DRIVER',
+          role: 'SERVICE_PROVIDER',
         },
       };
     }
@@ -140,7 +186,7 @@ export class AuthService {
   }
 
   /**
-   * Send OTP only when phone is not in users or drivers (new registration).
+   * Send OTP only when phone is not in users or service providers (new registration).
    */
   async sendOtp(sendOtpDto: SendOtpDto, ipAddress: string): Promise<{ message: string }> {
     const { phone } = sendOtpDto;
@@ -202,8 +248,9 @@ export class AuthService {
         this.logger.log(`Guest user ${user.id} (${phone}) is signing up - will merge orders if any exist`);
       }
 
+      const role = (user as { role?: string }).role ?? 'CUSTOMER';
       const { accessToken, refreshToken } =
-        await this.tokenService.generateTokens(user.id, user.phone, deviceId);
+        await this.tokenService.generateTokens(user.id, user.phone, deviceId, role);
 
       this.logger.log(`Successful OTP verification for user ${user.id} (${phone}) from IP: ${ipAddress}`);
 
@@ -215,7 +262,7 @@ export class AuthService {
           phone: user.phone,
           name: user.name,
           email: user.email ?? undefined,
-          role: (user as { role?: string }).role ?? 'CUSTOMER',
+          role,
         },
         isGuest: isGuestUser,
         isNewUser,

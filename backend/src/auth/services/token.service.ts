@@ -9,6 +9,7 @@ interface TokenPayload {
   phone: string;
   tokenVersion: number;
   deviceId?: string;
+  role?: string;
 }
 
 interface RefreshTokenData {
@@ -16,6 +17,7 @@ interface RefreshTokenData {
   phone: string;
   tokenVersion: number;
   deviceId?: string;
+  role?: string;
 }
 
 @Injectable()
@@ -48,6 +50,7 @@ export class TokenService {
     userId: string,
     phone: string,
     deviceId?: string,
+    role?: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     // Get or create token version for user
     const tokenVersion = await this.getTokenVersion(userId);
@@ -57,6 +60,7 @@ export class TokenService {
       phone,
       tokenVersion,
       ...(deviceId && { deviceId }),
+      ...(role && { role }),
     };
 
     const accessToken = this.jwtService.sign(payload, {
@@ -126,6 +130,7 @@ export class TokenService {
         phone: payload.phone,
         tokenVersion: payload.tokenVersion,
         deviceId: payload.deviceId,
+        role: payload.role,
       };
     } catch (error: any) {
       this.logger.warn(`Refresh token verification failed: ${error?.message || 'Unknown error'}`);
@@ -149,6 +154,7 @@ export class TokenService {
       tokenData.userId,
       tokenData.phone,
       tokenData.deviceId,
+      tokenData.role,
     );
   }
 

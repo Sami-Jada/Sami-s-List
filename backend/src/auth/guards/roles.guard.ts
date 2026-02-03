@@ -27,26 +27,11 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('User not authenticated');
     }
 
-    // Get user from database to check role
-    // Note: Currently User model doesn't have role field
-    // This is a placeholder for when roles are added
-    // For now, you can add role to JWT payload in TokenService.generateTokens()
-    // and access via user.role from request
-    
-    // TODO: Implement role checking when roles are added to User model or JWT payload
-    // Example implementation:
-    // const dbUser = await this.prisma.user.findUnique({
-    //   where: { id: user.userId },
-    //   select: { role: true },
-    // });
-    // 
-    // if (!dbUser || !dbUser.role || !requiredRoles.includes(dbUser.role)) {
-    //   throw new ForbiddenException('Insufficient permissions');
-    // }
+    const userRole = user.role;
+    if (!userRole || !requiredRoles.includes(userRole)) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
 
-    // Temporary: Allow access if no role check (will be implemented when roles are added)
-    // Uncomment above code when roles are implemented in User model or JWT payload
-
-    return true; // Temporary: allow access until roles are implemented
+    return true;
   }
 }

@@ -4,13 +4,13 @@ export interface DriverOrder {
   id: string;
   orderNumber: string;
   status: string;
-  tankQuantity: number;
+  quantity: number;
   totalPrice: number;
   paymentMethod?: string | null;
   paymentStatus: string;
   createdAt: string;
   estimatedDeliveryTime?: string | null;
-  deliveredAt?: string | null;
+  completedAt?: string | null;
   user: {
     id: string;
     name: string | null;
@@ -22,7 +22,7 @@ export interface DriverOrder {
     phone: string;
     address: string | null;
   } | null;
-  driver?: {
+  serviceProvider?: {
     id: string;
     name: string;
     phone: string;

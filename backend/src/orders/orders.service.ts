@@ -8,11 +8,11 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 import { VendorsService } from '../vendors/vendors.service';
-import { DriversService } from '../drivers/drivers.service';
+import { ServiceProvidersService } from '../service-providers/service-providers.service';
 import { AddressesHelperService } from './services/addresses-helper.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
-import { AssignDriverDto } from './dto/assign-driver.dto';
+import { AssignServiceProviderDto } from './dto/assign-service-provider.dto';
 import { OrderFilterDto } from './dto/order-filter.dto';
 import { CancelOrderDto } from './dto/cancel-order.dto';
 import { OrderStatusHistoryService } from './services/order-status-history.service';
@@ -30,7 +30,7 @@ export class OrdersService {
   constructor(
     private prisma: PrismaService,
     private vendorsService: VendorsService,
-    private driversService: DriversService,
+    private serviceProvidersService: ServiceProvidersService,
     private addressesHelper: AddressesHelperService,
     private statusHistoryService: OrderStatusHistoryService,
     private stateMachine: OrderStateMachineService,
@@ -104,7 +104,7 @@ export class OrdersService {
     // Calculate price
     const priceCalculation = await this.calculatePrice(
       vendor.id,
-      createOrderDto.tankQuantity,
+      createOrderDto.quantity,
     );
 
     // Estimate delivery time
@@ -122,8 +122,8 @@ export class OrdersService {
           vendorId: vendor.id,
           addressId: createOrderDto.addressId,
           status: OrderStatus.PENDING,
-          tankQuantity: createOrderDto.tankQuantity,
-          tankPrice: priceCalculation.tankPrice,
+          quantity: createOrderDto.quantity,
+          unitPrice: priceCalculation.unitPrice,
           serviceFee: priceCalculation.serviceFee,
           totalPrice: priceCalculation.totalPrice,
           paymentMethod: createOrderDto.paymentMethod,
@@ -196,8 +196,8 @@ export class OrdersService {
       where.vendorId = filters.vendorId;
     }
 
-    if (filters?.driverId) {
-      where.driverId = filters.driverId;
+    if (filters?.serviceProviderId) {
+      where.serviceProviderId = filters.serviceProviderId;
     }
 
     if (filters?.status) {
@@ -233,7 +233,7 @@ export class OrdersService {
             address: true,
           },
         },
-        driver: {
+        serviceProvider: {
           select: {
             id: true,
             name: true,
@@ -259,7 +259,7 @@ export class OrdersService {
     const user = await this.usersService.findById(userId);
 
     // Map user.phone -> driver.phone
-    const driver = await this.driversService.findByPhone(user.phone);
+    const driver = await this.serviceProvidersService.findByPhone(user.phone);
 
     if (!driver) {
       throw new ForbiddenException('Driver account not found for this user');
@@ -276,7 +276,7 @@ export class OrdersService {
 
     return this.prisma.order.findMany({
       where: {
-        driverId: driver.id,
+        serviceProviderId: driver.id,
         status: OrderStatus.ASSIGNED,
       },
       include: {
@@ -296,7 +296,7 @@ export class OrdersService {
             address: true,
           },
         },
-        driver: {
+        serviceProvider: {
           select: {
             id: true,
             name: true,
@@ -322,7 +322,7 @@ export class OrdersService {
 
     return this.prisma.order.findMany({
       where: {
-        driverId: driver.id,
+        serviceProviderId: driver.id,
         status: {
           in: [OrderStatus.ASSIGNED, OrderStatus.EN_ROUTE],
         } as any,
@@ -344,7 +344,7 @@ export class OrdersService {
             address: true,
           },
         },
-        driver: {
+        serviceProvider: {
           select: {
             id: true,
             name: true,
@@ -370,7 +370,7 @@ export class OrdersService {
 
     return this.prisma.order.findMany({
       where: {
-        driverId: driver.id,
+        serviceProviderId: driver.id,
         status: {
           in: [OrderStatus.DELIVERED, OrderStatus.COMPLETED],
         } as any,
@@ -392,7 +392,7 @@ export class OrdersService {
             address: true,
           },
         },
-        driver: {
+        serviceProvider: {
           select: {
             id: true,
             name: true,
@@ -433,7 +433,7 @@ export class OrdersService {
             address: true,
           },
         },
-        driver: {
+        serviceProvider: {
           select: {
             id: true,
             name: true,
@@ -475,7 +475,7 @@ export class OrdersService {
             phone: true,
           },
         },
-        driver: {
+        serviceProvider: {
           select: {
             id: true,
             name: true,
@@ -513,9 +513,9 @@ export class OrdersService {
         where: { id: orderId },
         data: {
           status: updateStatusDto.status,
-          // Set deliveredAt if status is DELIVERED
+          // Set completedAt if status is DELIVERED
           ...(updateStatusDto.status === OrderStatus.DELIVERED && {
-            deliveredAt: new Date(),
+            completedAt: new Date(),
           }),
         },
       });
@@ -538,7 +538,7 @@ export class OrdersService {
       status: updatedOrder.status,
       userId: updatedOrder.userId,
       vendorId: updatedOrder.vendorId,
-      driverId: updatedOrder.driverId,
+      serviceProviderId: updatedOrder.serviceProviderId,
     });
 
     this.logger.log(
@@ -549,69 +549,66 @@ export class OrdersService {
   }
 
   /**
-   * Assign driver to order
+   * Assign service provider to order
    */
-  async assignDriver(orderId: string, assignDriverDto: AssignDriverDto) {
+  async assignDriver(orderId: string, assignDto: AssignServiceProviderDto) {
     const order = await this.findById(orderId);
 
     // Validate order is in ACCEPTED status
     if (order.status !== OrderStatus.ACCEPTED) {
       throw new BadRequestException(
-        `Cannot assign driver. Order must be in ACCEPTED status. Current status: ${order.status}`,
+        `Cannot assign service provider. Order must be in ACCEPTED status. Current status: ${order.status}`,
       );
     }
 
-    // Verify driver exists and belongs to vendor
-    const driver = await this.prisma.driver.findUnique({
-      where: { id: assignDriverDto.driverId },
+    // Verify service provider exists and belongs to vendor
+    const serviceProvider = await this.prisma.serviceProvider.findUnique({
+      where: { id: assignDto.serviceProviderId },
     });
 
-    if (!driver) {
-      throw new NotFoundException(`Driver with ID ${assignDriverDto.driverId} not found`);
+    if (!serviceProvider) {
+      throw new NotFoundException(`Service provider with ID ${assignDto.serviceProviderId} not found`);
     }
 
-    if (driver.vendorId !== order.vendorId) {
+    if (serviceProvider.vendorId !== order.vendorId) {
       throw new BadRequestException(
-        'Driver does not belong to the order vendor',
+        'Service provider does not belong to the order vendor',
       );
     }
 
-    if (!driver.isAvailable) {
-      throw new BadRequestException('Driver is not available');
+    if (!serviceProvider.isAvailable) {
+      throw new BadRequestException('Service provider is not available');
     }
 
     // Use transaction
     const updatedOrder = await this.prisma.$transaction(async (tx) => {
-      // Update order with driver and status
       const order = await tx.order.update({
         where: { id: orderId },
         data: {
-          driverId: assignDriverDto.driverId,
+          serviceProviderId: assignDto.serviceProviderId,
           status: OrderStatus.ASSIGNED,
         },
       });
 
-      // Create status history
       await tx.orderStatusHistory.create({
         data: {
           orderId,
           status: OrderStatus.ASSIGNED,
-          notes: `Driver ${driver.name} assigned`,
+          notes: `Service provider ${serviceProvider.name} assigned`,
         },
       });
 
       return order;
     });
 
-    // Emit event
     this.eventEmitter.emit('order.driver.assigned', {
       orderId: updatedOrder.id,
-      driverId: assignDriverDto.driverId,
+      serviceProviderId: assignDto.serviceProviderId,
       userId: updatedOrder.userId,
     });
 
     this.logger.log(
-      `Driver ${assignDriverDto.driverId} assigned to order ${orderId}`,
+      `Service provider ${assignDto.serviceProviderId} assigned to order ${orderId}`,
     );
 
     return updatedOrder;
@@ -620,17 +617,17 @@ export class OrdersService {
   /**
    * Calculate order price
    */
-  async calculatePrice(vendorId: string, tankQuantity: number) {
+  async calculatePrice(vendorId: string, quantity: number) {
     const vendor = await this.vendorsService.findById(vendorId);
 
-    const tankPrice = Number(vendor.tankPrice);
-    const serviceFee = Number(vendor.serviceFee);
+    const unitPrice = vendor.unitPrice != null ? Number(vendor.unitPrice) : 0;
+    const serviceFee = vendor.serviceFee != null ? Number(vendor.serviceFee) : 0;
 
-    const totalTankPrice = tankPrice * tankQuantity;
-    const totalPrice = totalTankPrice + serviceFee;
+    const totalUnitPrice = unitPrice * quantity;
+    const totalPrice = totalUnitPrice + serviceFee;
 
     return {
-      tankPrice: tankPrice.toString(),
+      unitPrice: unitPrice.toString(),
       serviceFee: serviceFee.toString(),
       totalPrice: totalPrice.toString(),
     };
@@ -730,12 +727,12 @@ export class OrdersService {
         });
       }
 
-      // Update driver total deliveries count
-      if (order.driverId) {
-        await tx.driver.update({
-          where: { id: order.driverId },
+      // Update service provider total jobs count
+      if (order.serviceProviderId) {
+        await tx.serviceProvider.update({
+          where: { id: order.serviceProviderId },
           data: {
-            totalDeliveries: {
+            totalJobs: {
               increment: 1,
             },
           },
@@ -752,11 +749,10 @@ export class OrdersService {
       });
     }
 
-    if (completedOrder.driverId) {
-      // TODO: Implement driver rating update when DriversService has the method
-      // this.driversService.updateRating(completedOrder.driverId).catch((err) => {
-      //   this.logger.error(`Failed to update driver rating: ${err.message}`);
-      // });
+    if (completedOrder.serviceProviderId) {
+      this.serviceProvidersService.updateRating(completedOrder.serviceProviderId).catch((err) => {
+        this.logger.error(`Failed to update service provider rating: ${err.message}`);
+      });
     }
 
     // Emit event
@@ -764,7 +760,7 @@ export class OrdersService {
       orderId: completedOrder.id,
       userId: completedOrder.userId,
       vendorId: completedOrder.vendorId,
-      driverId: completedOrder.driverId,
+      serviceProviderId: completedOrder.serviceProviderId,
     });
 
     this.logger.log(`Order ${orderId} completed`);

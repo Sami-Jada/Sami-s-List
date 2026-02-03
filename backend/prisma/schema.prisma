@@ -12,6 +12,7 @@ model User {
   phone        String    @unique
   name         String
   email        String?   @unique
+  username     String?   @unique
   passwordHash String?
   role         String    @default("CUSTOMER")
   createdAt    DateTime  @default(now())
@@ -23,6 +24,7 @@ model User {
 
   @@index([phone])
   @@index([email])
+  @@index([username])
   @@map("users")
 }
 
@@ -75,24 +77,24 @@ model VendorService {
 }
 
 model Vendor {
-  id              String          @id @default(uuid())
+  id              String             @id @default(uuid())
   name            String
-  phone           String          @unique
+  phone           String             @unique
   businessLicense String?
   address         String
-  latitude        Decimal         @db.Decimal(10, 8)
-  longitude       Decimal         @db.Decimal(11, 8)
-  tankPrice       Decimal         @db.Decimal(10, 2)
-  serviceFee      Decimal         @db.Decimal(10, 2)
-  isActive        Boolean         @default(true)
-  rating          Float           @default(0)
-  totalOrders     Int             @default(0)
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  drivers         Driver[]
+  latitude        Decimal            @db.Decimal(10, 8)
+  longitude       Decimal            @db.Decimal(11, 8)
+  unitPrice       Decimal?           @db.Decimal(10, 2)
+  serviceFee      Decimal?           @db.Decimal(10, 2)
+  isActive        Boolean            @default(true)
+  rating          Float              @default(0)
+  totalOrders     Int                @default(0)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  serviceProviders ServiceProvider[]
   orders          Order[]
   ratings         Rating[]
-  serviceLinks    VendorService[]
+  serviceLinks   VendorService[]
 
   @@index([phone])
   @@index([latitude, longitude])
@@ -100,18 +102,18 @@ model Vendor {
   @@map("vendors")
 }
 
-model Driver {
+model ServiceProvider {
   id               String   @id @default(uuid())
   vendorId         String
   name             String
   phone            String   @unique
   passwordHash     String?
-  vehicleInfo      Json?
+  extraInfo        Json?
   currentLatitude  Decimal? @db.Decimal(10, 8)
   currentLongitude Decimal? @db.Decimal(11, 8)
   isAvailable      Boolean  @default(true)
   rating           Float    @default(0)
-  totalDeliveries  Int      @default(0)
+  totalJobs        Int      @default(0)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   vendor           Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
@@ -122,7 +124,7 @@ model Driver {
   @@index([phone])
   @@index([isAvailable])
   @@index([currentLatitude, currentLongitude])
-  @@map("drivers")
+  @@map("service_providers")
 }
 
 model Order {
@@ -130,30 +132,30 @@ model Order {
   orderNumber           String               @unique
   userId                String
   vendorId              String?
-  driverId              String?
+  serviceProviderId     String?
   addressId             String
   status                String               @default("PENDING")
-  tankQuantity          Int                  @default(1)
-  tankPrice             Decimal              @db.Decimal(10, 2)
+  quantity              Int                  @default(1)
+  unitPrice             Decimal              @db.Decimal(10, 2)
   serviceFee            Decimal              @db.Decimal(10, 2)
   totalPrice            Decimal              @db.Decimal(10, 2)
   paymentMethod         String?
   paymentStatus         String               @default("PENDING")
   estimatedDeliveryTime DateTime?
-  deliveredAt           DateTime?
+  completedAt           DateTime?
   createdAt             DateTime             @default(now())
   updatedAt             DateTime             @updatedAt
   statusHistory         OrderStatusHistory[]
   address               Address              @relation(fields: [addressId], references: [id], onDelete: Cascade)
-  driver                Driver?              @relation(fields: [driverId], references: [id])
+  serviceProvider      ServiceProvider?     @relation(fields: [serviceProviderId], references: [id])
   user                  User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vendor                Vendor?              @relation(fields: [vendorId], references: [id])
+  vendor                Vendor?             @relation(fields: [vendorId], references: [id])
   payment               Payment?
   rating                Rating?
 
   @@index([userId])
   @@index([vendorId])
-  @@index([driverId])
+  @@index([serviceProviderId])
   @@index([status])
   @@index([orderNumber])
   @@index([createdAt])
@@ -195,22 +197,22 @@ model Payment {
 }
 
 model Rating {
-  id        String   @id @default(uuid())
-  orderId   String   @unique
-  userId    String
-  driverId  String?
-  vendorId  String?
-  rating    Int
-  comment   String?
-  createdAt DateTime @default(now())
-  driver    Driver?  @relation(fields: [driverId], references: [id])
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vendor    Vendor?  @relation(fields: [vendorId], references: [id])
+  id                 String           @id @default(uuid())
+  orderId            String           @unique
+  userId             String
+  serviceProviderId  String?
+  vendorId           String?
+  rating             Int
+  comment            String?
+  createdAt          DateTime         @default(now())
+  serviceProvider    ServiceProvider? @relation(fields: [serviceProviderId], references: [id])
+  order              Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendor             Vendor?          @relation(fields: [vendorId], references: [id])
 
   @@index([orderId])
   @@index([userId])
-  @@index([driverId])
+  @@index([serviceProviderId])
   @@index([vendorId])
   @@index([rating])
   @@map("ratings")

@@ -13,7 +13,7 @@ export class CreateOrderDto {
   addressId: string;
 
   @ApiProperty({
-    description: 'Number of gas cylinders',
+    description: 'Quantity (e.g. number of units or 1 for a single job)',
     example: 2,
     minimum: 1,
     maximum: 10,
@@ -23,7 +23,7 @@ export class CreateOrderDto {
   @Max(10, { message: 'Maximum order quantity is 10' })
   @Type(() => Number)
   @IsNotEmpty()
-  tankQuantity: number;
+  quantity: number;
 
   @ApiProperty({
     enum: PaymentMethod,

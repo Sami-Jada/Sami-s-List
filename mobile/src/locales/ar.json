@@ -10,6 +10,13 @@
     "signInToContinue": "أدخل رقم هاتفك أدناه للبدء",
     "phonePlaceholder": "+962 7x xxx xxxx"
   },
+  "categories": {
+    "title": "الفئات",
+    "noCategories": "لا توجد فئات متاحة",
+    "noVendors": "لا يوجد مزودون في هذه الفئة",
+    "call": "اتصال",
+    "rating": "التقييم"
+  },
   "home": {
     "welcome": "مرحباً بك في قائمة سامي",
     "subtitle": "اعثر واستأجر مقاولين موثوقين لأي عمل",
@@ -79,7 +86,7 @@
     "noActive": "لا توجد طلبات نشطة",
     "noHistory": "لا توجد طلبات سابقة",
     "deliveredAt": "تم التسليم في",
-    "profileTitle": "ملف السائق"
+    "profileTitle": "ملف مقدم الخدمة"
   },
   "common": {
     "loading": "جاري التحميل...",

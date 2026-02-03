@@ -1,8 +1,17 @@
-import { IsOptional, IsBoolean, IsNumber, Min, Max } from 'class-validator';
+import { IsOptional, IsBoolean, IsNumber, Min, Max, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
 export class VendorFilterDto {
+  @ApiProperty({
+    required: false,
+    description: 'Filter by service (category) ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @IsUUID()
+  @IsOptional()
+  serviceId?: string;
+
   @ApiProperty({
     required: false,
     description: 'Filter by active status',

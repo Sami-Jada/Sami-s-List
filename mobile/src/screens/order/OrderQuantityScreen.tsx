@@ -30,9 +30,9 @@ export default function OrderQuantityScreen() {
       // For now, assume backend uses the user's default address and payment method CASH
       // If multiple addresses are available, we can add an address selection step later.
       const createdOrder = await orderService.createOrder({
-        tankQuantity: quantity,
+        quantity,
         paymentMethod: 'CASH',
-      } as any);
+      });
 
       navigation.navigate('Confirmation' as never, { order: createdOrder } as never);
     } catch (error: any) {

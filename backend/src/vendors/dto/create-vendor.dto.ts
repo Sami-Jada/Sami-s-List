@@ -35,15 +35,15 @@ export class CreateVendorDto {
   @IsNotEmpty()
   longitude: number;
 
-  @ApiProperty()
+  @ApiProperty({ required: false, description: 'Default per-unit or per-job price' })
   @IsDecimal()
-  @IsNotEmpty()
-  tankPrice: string;
+  @IsOptional()
+  unitPrice?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false, description: 'Service fee (e.g. delivery fee)' })
   @IsDecimal()
-  @IsNotEmpty()
-  serviceFee: string;
+  @IsOptional()
+  serviceFee?: string;
 
   @ApiProperty({ required: false, default: true })
   @IsBoolean()

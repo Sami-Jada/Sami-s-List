@@ -8,7 +8,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   isGuestUser: boolean;
-  isDriver: boolean;
+  isServiceProvider: boolean;
   checkPhone: (phone: string) => Promise<import('@shared').CheckPhoneResponse>;
   loginWithPassword: (phone: string, password: string) => Promise<LoginResponse>;
   sendOtp: (phone: string) => Promise<{ message: string }>;
@@ -23,7 +23,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDriver, setIsDriver] = useState(false);
+  const [isServiceProvider, setIsServiceProvider] = useState(false);
 
   useEffect(() => {
     loadUser();
@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!token) {
         // No token, skip API call entirely
         setUser(null);
-        setIsDriver(false);
+        setIsServiceProvider(false);
         setIsLoading(false);
         return;
       }
@@ -45,23 +45,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const userData = await authService.getCurrentUser();
         setUser(userData);
-        // For now, treat a specific role flag on the user as driver indicator if available
-        // Fallback: you can later replace this with an explicit "role" field.
-        // @ts-expect-error: role field may not yet be on User type
-        const hasDriverRole = (userData as User & { role?: string }).role === 'DRIVER';
-        setIsDriver(hasDriverRole);
+        const hasServiceProviderRole = (userData as User & { role?: string }).role === 'SERVICE_PROVIDER';
+        setIsServiceProvider(hasServiceProviderRole);
       } catch (error: any) {
         // Silently handle any errors - just clear token and continue as guest
         console.log('Failed to load user (continuing as guest):', error?.message || 'Unknown error');
         await SecureStore.deleteItemAsync('access_token');
         await SecureStore.deleteItemAsync('refresh_token');
         setUser(null);
-        setIsDriver(false);
+        setIsServiceProvider(false);
       }
     } catch (error: any) {
       // Silent fail - just continue without user
       setUser(null);
-      setIsDriver(false);
+      setIsServiceProvider(false);
     } finally {
       setIsLoading(false);
     }
@@ -89,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await SecureStore.setItemAsync('access_token', response.accessToken);
     await SecureStore.setItemAsync('refresh_token', response.refreshToken);
     setUser(response.user);
-    setIsDriver((response.user as User & { role?: string }).role === 'DRIVER');
+    setIsServiceProvider((response.user as User & { role?: string }).role === 'SERVICE_PROVIDER');
     return response;
   };
 
@@ -125,7 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         isLoading,
         isGuestUser,
-        isDriver,
+        isServiceProvider,
         checkPhone,
         loginWithPassword,
         sendOtp,

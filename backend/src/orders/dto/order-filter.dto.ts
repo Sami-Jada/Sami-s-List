@@ -22,11 +22,11 @@ export class OrderFilterDto {
 
   @ApiProperty({
     required: false,
-    description: 'Filter by driver ID',
+    description: 'Filter by service provider ID',
   })
   @IsString()
   @IsOptional()
-  driverId?: string;
+  serviceProviderId?: string;
 
   @ApiProperty({
     enum: OrderStatus,

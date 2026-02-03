@@ -2,7 +2,7 @@ import { IsNumber, IsNotEmpty, Min, Max } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
-export class UpdateDriverLocationDto {
+export class UpdateServiceProviderLocationDto {
   @ApiProperty({
     example: 31.9539,
     description: 'Current latitude (must be between 29-34 for Jordan)',
@@ -25,8 +25,3 @@ export class UpdateDriverLocationDto {
   @IsNotEmpty()
   longitude: number;
 }
-
-
-
-
-

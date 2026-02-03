@@ -35,10 +35,16 @@ export class VendorsService {
       };
     }
 
+    if (filters?.serviceId) {
+      where.serviceLinks = {
+        some: { serviceId: filters.serviceId },
+      };
+    }
+
     const vendors = await this.prisma.vendor.findMany({
       where,
       include: {
-        drivers: {
+        serviceProviders: {
           where: { isAvailable: true },
           select: {
             id: true,
@@ -49,7 +55,7 @@ export class VendorsService {
         _count: {
           select: {
             orders: true,
-            drivers: true,
+            serviceProviders: true,
           },
         },
       },
@@ -84,20 +90,20 @@ export class VendorsService {
     const vendor = await this.prisma.vendor.findUnique({
       where: { id },
       include: {
-        drivers: {
+        serviceProviders: {
           select: {
             id: true,
             name: true,
             phone: true,
             isAvailable: true,
             rating: true,
-            totalDeliveries: true,
+            totalJobs: true,
           },
         },
         _count: {
           select: {
             orders: true,
-            drivers: true,
+            serviceProviders: true,
             ratings: true,
           },
         },
@@ -132,7 +138,7 @@ export class VendorsService {
         address,
         latitude,
         longitude,
-        "tankPrice",
+        "unitPrice",
         "serviceFee",
         "isActive",
         rating,
@@ -154,8 +160,8 @@ export class VendorsService {
       ...vendor,
       latitude: Number(vendor.latitude),
       longitude: Number(vendor.longitude),
-      tankPrice: Number(vendor.tankPrice),
-      serviceFee: Number(vendor.serviceFee),
+      unitPrice: vendor.unitPrice != null ? Number(vendor.unitPrice) : null,
+      serviceFee: vendor.serviceFee != null ? Number(vendor.serviceFee) : null,
       distance: Number(vendor.distance_km),
     }));
   }
@@ -178,7 +184,14 @@ export class VendorsService {
 
     const vendor = await this.prisma.vendor.create({
       data: {
-        ...createVendorDto,
+        name: createVendorDto.name,
+        phone: createVendorDto.phone,
+        businessLicense: createVendorDto.businessLicense,
+        address: createVendorDto.address,
+        latitude: createVendorDto.latitude,
+        longitude: createVendorDto.longitude,
+        unitPrice: createVendorDto.unitPrice != null ? createVendorDto.unitPrice : undefined,
+        serviceFee: createVendorDto.serviceFee != null ? createVendorDto.serviceFee : undefined,
         isActive: createVendorDto.isActive ?? true,
       },
     });

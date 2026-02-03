@@ -12,12 +12,13 @@ import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { VendorsModule } from './vendors/vendors.module';
-import { DriversModule } from './drivers/drivers.module';
+import { ServiceProvidersModule } from './service-providers/service-providers.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { LoggerModule } from './logger/logger.module';
 import { ServicesModule } from './services/services.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -92,12 +93,13 @@ import { ServicesModule } from './services/services.module';
     AuthModule,
     UsersModule,
     VendorsModule,
-    DriversModule,
+    ServiceProvidersModule,
     OrdersModule,
     PaymentsModule,
     NotificationsModule,
     LoggerModule,
     ServicesModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -100,6 +100,26 @@ export class UsersService {
   }
 
   /**
+   * Find user by username including passwordHash (for admin login only). Returns null if not found.
+   */
+  async findByUsernameWithPassword(username: string) {
+    return this.prisma.user.findUnique({
+      where: { username },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        username: true,
+        role: true,
+        passwordHash: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+  /**
    * Set password for a user (customers). Hashes and stores passwordHash.
    */
   async setPassword(userId: string, password: string) {
@@ -110,8 +130,8 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
-    if (user.role === 'DRIVER') {
-      throw new BadRequestException('Drivers set password via driver account');
+    if (user.role === 'SERVICE_PROVIDER') {
+      throw new BadRequestException('Service providers set password via service provider account');
     }
     const passwordHash = await bcrypt.hash(password, 10);
     await this.prisma.user.update({

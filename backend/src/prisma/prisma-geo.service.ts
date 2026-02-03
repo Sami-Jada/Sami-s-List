@@ -14,8 +14,8 @@ interface VendorWithDistance {
   address: string;
   latitude: number;
   longitude: number;
-  tankPrice: number;
-  serviceFee: number;
+  unitPrice: number | null;
+  serviceFee: number | null;
   rating: number;
   isActive: boolean;
   distance?: number; // Distance in kilometers
@@ -76,7 +76,7 @@ export class PrismaGeoService {
         address: true,
         latitude: true,
         longitude: true,
-        tankPrice: true,
+        unitPrice: true,
         serviceFee: true,
         rating: true,
         isActive: true,
@@ -97,8 +97,8 @@ export class PrismaGeoService {
           ...vendor,
           latitude: Number(vendor.latitude),
           longitude: Number(vendor.longitude),
-          tankPrice: Number(vendor.tankPrice),
-          serviceFee: Number(vendor.serviceFee),
+          unitPrice: vendor.unitPrice != null ? Number(vendor.unitPrice) : null,
+          serviceFee: vendor.serviceFee != null ? Number(vendor.serviceFee) : null,
           distance,
         };
       })
@@ -110,12 +110,12 @@ export class PrismaGeoService {
   }
 
   /**
-   * Find nearest available drivers to a given location
+   * Find nearest available service providers to a given location
    * @param coordinates - Target location
-   * @param vendorId - Optional vendor ID to filter drivers
+   * @param vendorId - Optional vendor ID to filter service providers
    * @param maxDistance - Maximum distance in kilometers (default: 5km)
    * @param limit - Maximum number of results (default: 5)
-   * @returns Array of drivers with distance calculated
+   * @returns Array of service providers with distance calculated
    */
   async findNearestDrivers(
     coordinates: Coordinates,
@@ -123,7 +123,7 @@ export class PrismaGeoService {
     maxDistance: number = 5,
     limit: number = 5,
   ) {
-    const where: Prisma.DriverWhereInput = {
+    const where: Prisma.ServiceProviderWhereInput = {
       isAvailable: true,
       currentLatitude: { not: null },
       currentLongitude: { not: null },
@@ -133,7 +133,7 @@ export class PrismaGeoService {
       where.vendorId = vendorId;
     }
 
-    const drivers = await this.prisma.driver.findMany({
+    const drivers = await this.prisma.serviceProvider.findMany({
       where,
       select: {
         id: true,
@@ -203,7 +203,7 @@ export class PrismaGeoService {
         address: true,
         latitude: true,
         longitude: true,
-        tankPrice: true,
+        unitPrice: true,
         serviceFee: true,
         rating: true,
         isActive: true,

@@ -10,6 +10,13 @@
     "signInToContinue": "Enter your phone number below to get started",
     "phonePlaceholder": "+962 7x xxx xxxx"
   },
+  "categories": {
+    "title": "Categories",
+    "noCategories": "No categories available",
+    "noVendors": "No vendors in this category",
+    "call": "Call",
+    "rating": "Rating"
+  },
   "home": {
     "welcome": "Welcome to Sami's List",
     "subtitle": "Find and hire trusted contractors for any job",
@@ -79,7 +86,7 @@
     "noActive": "No active orders",
     "noHistory": "No previous orders",
     "deliveredAt": "Delivered at",
-    "profileTitle": "Driver Profile"
+    "profileTitle": "Service Provider Profile"
   },
   "common": {
     "loading": "Loading...",

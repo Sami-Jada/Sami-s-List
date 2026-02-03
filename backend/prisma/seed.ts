@@ -1,6 +1,14 @@
-import { PrismaClient, AddressLabel, OrderStatus, PaymentMethod, PaymentStatus } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
+import * as dotenv from 'dotenv';
+
+dotenv.config({ path: '.env' });
 
 const prisma = new PrismaClient();
+
+// Admin user is only created when SEED_ADMIN_USERNAME and SEED_ADMIN_PASSWORD are set in .env
+const SEED_ADMIN_USERNAME = process.env.SEED_ADMIN_USERNAME;
+const SEED_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD;
 
 async function main() {
   console.log('🌱 Starting database seed...');
@@ -12,7 +20,7 @@ async function main() {
   await prisma.orderStatusHistory.deleteMany();
   await prisma.order.deleteMany();
   await prisma.address.deleteMany();
-  await prisma.driver.deleteMany();
+  await prisma.serviceProvider.deleteMany();
   await prisma.vendorService.deleteMany();
   await prisma.service.deleteMany();
   await prisma.vendor.deleteMany();
@@ -28,7 +36,7 @@ async function main() {
       address: 'King Hussein Street, Amman',
       latitude: 31.9539, // Amman coordinates
       longitude: 35.9106,
-      tankPrice: 8.5,
+      unitPrice: 8.5,
       serviceFee: 2.0,
       isActive: true,
       rating: 4.5,
@@ -37,14 +45,72 @@ async function main() {
   });
   console.log(`✅ Created vendor: ${vendor.name}`);
 
-  // Create 2 Drivers
-  console.log('🚗 Creating drivers...');
-  const driver1 = await prisma.driver.create({
+  // Create service categories (for Categories screen)
+  console.log('📂 Creating service categories...');
+  const serviceGas = await prisma.service.create({
+    data: {
+      name: 'Gas Canister Refill',
+      slug: 'gas-canister-refill',
+      iconName: 'gas-canister',
+      isPopular: true,
+      sortOrder: 0,
+    },
+  });
+  const servicePlumber = await prisma.service.create({
+    data: {
+      name: 'Plumbers',
+      slug: 'plumbers',
+      iconName: 'plumber',
+      isPopular: true,
+      sortOrder: 1,
+    },
+  });
+  const serviceElectrician = await prisma.service.create({
+    data: {
+      name: 'Electricians',
+      slug: 'electricians',
+      iconName: 'electrician',
+      isPopular: false,
+      sortOrder: 2,
+    },
+  });
+  const serviceWater = await prisma.service.create({
+    data: {
+      name: 'Water Tank Refills',
+      slug: 'water-tank-refills',
+      iconName: 'water-tank',
+      isPopular: false,
+      sortOrder: 3,
+    },
+  });
+  const serviceGardener = await prisma.service.create({
+    data: {
+      name: 'Gardeners',
+      slug: 'gardeners',
+      iconName: 'gardener',
+      isPopular: false,
+      sortOrder: 4,
+    },
+  });
+  console.log(`✅ Created services: Gas, Plumbers, Electricians, Water Tank, Gardeners`);
+
+  // Link vendor to Gas Canister Refill (and optionally others)
+  await prisma.vendorService.create({
+    data: { vendorId: vendor.id, serviceId: serviceGas.id },
+  });
+  await prisma.vendorService.create({
+    data: { vendorId: vendor.id, serviceId: servicePlumber.id },
+  });
+  console.log(`✅ Linked vendor to services: Gas Canister Refill, Plumbers`);
+
+  // Create 2 Service providers
+  console.log('🚗 Creating service providers...');
+  const sp1 = await prisma.serviceProvider.create({
     data: {
       vendorId: vendor.id,
       name: 'Ahmad Al-Mahmoud',
       phone: '+962792345678', // Note: Encrypt in production
-      vehicleInfo: {
+      extraInfo: {
         type: 'Truck',
         plateNumber: 'AMM-1234',
         capacity: '20 cylinders',
@@ -53,16 +119,16 @@ async function main() {
       currentLongitude: 35.9100,
       isAvailable: true,
       rating: 4.8,
-      totalDeliveries: 0,
+      totalJobs: 0,
     },
   });
 
-  const driver2 = await prisma.driver.create({
+  const sp2 = await prisma.serviceProvider.create({
     data: {
       vendorId: vendor.id,
       name: 'Mohammed Al-Zahra',
       phone: '+962793456789', // Note: Encrypt in production
-      vehicleInfo: {
+      extraInfo: {
         type: 'Van',
         plateNumber: 'AMM-5678',
         capacity: '15 cylinders',
@@ -71,10 +137,10 @@ async function main() {
       currentLongitude: 35.9200,
       isAvailable: true,
       rating: 4.6,
-      totalDeliveries: 0,
+      totalJobs: 0,
     },
   });
-  console.log(`✅ Created drivers: ${driver1.name}, ${driver2.name}`);
+  console.log(`✅ Created service providers: ${sp1.name}, ${sp2.name}`);
 
   // Create 3 Users
   console.log('👤 Creating users...');
@@ -101,6 +167,23 @@ async function main() {
       email: 'omar@example.com',
     },
   });
+
+  // Create seed admin user for admin panel when SEED_ADMIN_USERNAME and SEED_ADMIN_PASSWORD are set in .env
+  if (SEED_ADMIN_USERNAME && SEED_ADMIN_PASSWORD) {
+    const adminPasswordHash = await bcrypt.hash(SEED_ADMIN_PASSWORD, 10);
+    await prisma.user.create({
+      data: {
+        phone: `admin-${SEED_ADMIN_USERNAME}`,
+        name: 'Admin',
+        username: SEED_ADMIN_USERNAME,
+        passwordHash: adminPasswordHash,
+        role: 'ADMIN',
+      },
+    });
+    console.log(`✅ Created admin user (username: ${SEED_ADMIN_USERNAME}). Set SEED_ADMIN_USERNAME and SEED_ADMIN_PASSWORD in .env to create an admin.`);
+  } else {
+    console.log('⏭️ Skipped admin user (set SEED_ADMIN_USERNAME and SEED_ADMIN_PASSWORD in .env to create one).');
+  }
   console.log(`✅ Created users: ${user1.name}, ${user2.name}, ${user3.name}`);
 
   // Create addresses for users
@@ -108,7 +191,7 @@ async function main() {
   const address1 = await prisma.address.create({
     data: {
       userId: user1.id,
-      label: AddressLabel.HOME,
+      label: 'HOME',
       addressLine: '123 Jabal Amman, Building 5, Apartment 12',
       city: 'Amman',
       latitude: 31.9540,
@@ -120,7 +203,7 @@ async function main() {
   const address2 = await prisma.address.create({
     data: {
       userId: user1.id,
-      label: AddressLabel.WORK,
+      label: 'WORK',
       addressLine: '456 King Abdullah II Street, Office 301',
       city: 'Amman',
       latitude: 31.9550,
@@ -132,7 +215,7 @@ async function main() {
   const address3 = await prisma.address.create({
     data: {
       userId: user2.id,
-      label: AddressLabel.HOME,
+      label: 'HOME',
       addressLine: '789 Abdoun Circle, Villa 8',
       city: 'Amman',
       latitude: 31.9560,
@@ -144,7 +227,7 @@ async function main() {
   const address4 = await prisma.address.create({
     data: {
       userId: user3.id,
-      label: AddressLabel.HOME,
+      label: 'HOME',
       addressLine: '321 Shmeisani, Building 10, Floor 3',
       city: 'Amman',
       latitude: 31.9570,
@@ -161,16 +244,16 @@ async function main() {
       orderNumber: `ORD-${Date.now()}-001`,
       userId: user1.id,
       vendorId: vendor.id,
-      driverId: driver1.id,
+      serviceProviderId: sp1.id,
       addressId: address1.id,
-      status: OrderStatus.DELIVERED,
-      tankQuantity: 2,
-      tankPrice: 8.5,
+      status: 'DELIVERED',
+      quantity: 2,
+      unitPrice: 8.5,
       serviceFee: 2.0,
       totalPrice: 19.0,
-      paymentMethod: PaymentMethod.CASH,
-      paymentStatus: PaymentStatus.PAID,
-      deliveredAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+      paymentMethod: 'CASH',
+      paymentStatus: 'PAID',
+      completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
     },
   });
 
@@ -180,13 +263,13 @@ async function main() {
       userId: user2.id,
       vendorId: vendor.id,
       addressId: address3.id,
-      status: OrderStatus.EN_ROUTE,
-      tankQuantity: 1,
-      tankPrice: 8.5,
+      status: 'EN_ROUTE',
+      quantity: 1,
+      unitPrice: 8.5,
       serviceFee: 2.0,
       totalPrice: 10.5,
-      paymentMethod: PaymentMethod.CARD,
-      paymentStatus: PaymentStatus.PAID,
+      paymentMethod: 'CARD',
+      paymentStatus: 'PAID',
       estimatedDeliveryTime: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes from now
     },
   });
@@ -197,12 +280,12 @@ async function main() {
       userId: user3.id,
       vendorId: vendor.id,
       addressId: address4.id,
-      status: OrderStatus.PENDING,
-      tankQuantity: 1,
-      tankPrice: 8.5,
+      status: 'PENDING',
+      quantity: 1,
+      unitPrice: 8.5,
       serviceFee: 2.0,
       totalPrice: 10.5,
-      paymentStatus: PaymentStatus.PENDING,
+      paymentStatus: 'PENDING',
     },
   });
   console.log(`✅ Created ${3} orders`);
@@ -213,52 +296,52 @@ async function main() {
     data: [
       {
         orderId: order1.id,
-        status: OrderStatus.PENDING,
+        status: 'PENDING',
         notes: 'Order placed',
       },
       {
         orderId: order1.id,
-        status: OrderStatus.ACCEPTED,
+        status: 'ACCEPTED',
         notes: 'Vendor accepted order',
       },
       {
         orderId: order1.id,
-        status: OrderStatus.ASSIGNED,
-        notes: `Assigned to driver ${driver1.name}`,
+        status: 'ASSIGNED',
+        notes: `Assigned to service provider ${sp1.name}`,
       },
       {
         orderId: order1.id,
-        status: OrderStatus.EN_ROUTE,
+        status: 'EN_ROUTE',
         notes: 'Driver on the way',
       },
       {
         orderId: order1.id,
-        status: OrderStatus.DELIVERED,
+        status: 'DELIVERED',
         notes: 'Order delivered successfully',
       },
       {
         orderId: order2.id,
-        status: OrderStatus.PENDING,
+        status: 'PENDING',
         notes: 'Order placed',
       },
       {
         orderId: order2.id,
-        status: OrderStatus.ACCEPTED,
+        status: 'ACCEPTED',
         notes: 'Vendor accepted order',
       },
       {
         orderId: order2.id,
-        status: OrderStatus.ASSIGNED,
+        status: 'ASSIGNED',
         notes: 'Driver assignment pending',
       },
       {
         orderId: order2.id,
-        status: OrderStatus.EN_ROUTE,
+        status: 'EN_ROUTE',
         notes: 'Driver on the way',
       },
       {
         orderId: order3.id,
-        status: OrderStatus.PENDING,
+        status: 'PENDING',
         notes: 'Order placed, awaiting vendor confirmation',
       },
     ],
@@ -272,8 +355,8 @@ async function main() {
       orderId: order1.id,
       userId: user1.id,
       amount: 19.0,
-      method: PaymentMethod.CASH,
-      status: PaymentStatus.PAID,
+      method: 'CASH',
+      status: 'PAID',
       transactionId: 'TXN-CASH-001',
       metadata: {
         paidAt: new Date().toISOString(),
@@ -287,8 +370,8 @@ async function main() {
       orderId: order2.id,
       userId: user2.id,
       amount: 10.5,
-      method: PaymentMethod.CARD,
-      status: PaymentStatus.PAID,
+      method: 'CARD',
+      status: 'PAID',
       transactionId: 'TXN-CARD-002',
       metadata: {
         paidAt: new Date().toISOString(),
@@ -305,7 +388,7 @@ async function main() {
     data: {
       orderId: order1.id,
       userId: user1.id,
-      driverId: driver1.id,
+      serviceProviderId: sp1.id,
       vendorId: vendor.id,
       rating: 5,
       comment: 'Excellent service! Very fast delivery.',
@@ -313,21 +396,21 @@ async function main() {
   });
   console.log(`✅ Created rating`);
 
-  // Update vendor and driver statistics
+  // Update vendor and service provider statistics
   await prisma.vendor.update({
     where: { id: vendor.id },
     data: { totalOrders: 3 },
   });
 
-  await prisma.driver.update({
-    where: { id: driver1.id },
-    data: { totalDeliveries: 1 },
+  await prisma.serviceProvider.update({
+    where: { id: sp1.id },
+    data: { totalJobs: 1 },
   });
 
   console.log('✅ Database seed completed successfully!');
   console.log('\n📊 Summary:');
   console.log(`   - 1 Vendor: ${vendor.name}`);
-  console.log(`   - 2 Drivers`);
+  console.log(`   - 2 Service providers`);
   console.log(`   - 3 Users`);
   console.log(`   - 4 Addresses`);
   console.log(`   - 3 Orders`);

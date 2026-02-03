@@ -16,6 +16,13 @@ export async function getPopularServices(): Promise<ServiceCategory[]> {
   return data;
 }
 
+/** Get all categories (no popular filter). Used by Categories screen. */
+export async function getAllCategories(): Promise<ServiceCategory[]> {
+  const { data } = await api.get<ServiceCategory[]>('/services');
+  return data;
+}
+
 export const servicesService = {
   getPopularServices,
+  getAllCategories,
 };

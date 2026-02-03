@@ -6,7 +6,7 @@ import { OrderStateMachineService } from './services/order-state-machine.service
 import { AddressesHelperService } from './services/addresses-helper.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { VendorsModule } from '../vendors/vendors.module';
-import { DriversModule } from '../drivers/drivers.module';
+import { ServiceProvidersModule } from '../service-providers/service-providers.module';
 import { UsersModule } from '../users/users.module';
 import { AuthModule } from '../auth/auth.module';
 
@@ -14,7 +14,7 @@ import { AuthModule } from '../auth/auth.module';
   imports: [
     PrismaModule,
     VendorsModule,
-    DriversModule,
+    ServiceProvidersModule,
     UsersModule,
     AuthModule,
   ],

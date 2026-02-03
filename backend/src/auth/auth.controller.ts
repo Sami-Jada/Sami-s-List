@@ -17,6 +17,7 @@ import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { CheckPhoneDto } from './dto/check-phone.dto';
 import { LoginDto } from './dto/login.dto';
+import { AdminLoginDto } from './dto/admin-login.dto';
 import { SetPasswordDto } from './dto/set-password.dto';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -35,7 +36,7 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 900000 } })
   @Post('check-phone')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Check if phone exists (user or driver) for login branching' })
+  @ApiOperation({ summary: 'Check if phone exists (user or service provider) for login branching' })
   @ApiBody({ type: CheckPhoneDto })
   async checkPhone(@Body() dto: CheckPhoneDto) {
     return this.authService.checkPhone(dto.phone);
@@ -46,7 +47,7 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 900000 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Password login for existing user or driver' })
+  @ApiOperation({ summary: 'Password login for existing user or service provider' })
   @ApiBody({ type: LoginDto })
   async login(
     @Body() loginDto: LoginDto,
@@ -57,6 +58,20 @@ export class AuthController {
       loginDto.password,
       deviceId,
     );
+  }
+
+  @Public()
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 900000 } })
+  @Post('admin/login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Admin panel login (username + password only)' })
+  @ApiBody({ type: AdminLoginDto })
+  async adminLogin(
+    @Body() dto: AdminLoginDto,
+    @Headers('x-device-id') deviceId?: string,
+  ) {
+    return this.authService.adminLogin(dto.username, dto.password, deviceId);
   }
 
   @Public()

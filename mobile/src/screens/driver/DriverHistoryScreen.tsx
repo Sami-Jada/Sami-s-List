@@ -46,7 +46,7 @@ export default function DriverHistoryScreen() {
       </Text>
       <Text style={styles.line}>
         <Text style={styles.label}>{t('driver.quantity')}:</Text>{' '}
-        <Text style={styles.value}>{item.tankQuantity}</Text>
+        <Text style={styles.value}>{item.quantity}</Text>
       </Text>
       <Text style={styles.line}>
         <Text style={styles.label}>{t('driver.address')}:</Text>{' '}
@@ -58,10 +58,10 @@ export default function DriverHistoryScreen() {
         <Text style={styles.label}>{t('driver.total')}:</Text>{' '}
         <Text style={styles.value}>{item.totalPrice}</Text>
       </Text>
-      {item.deliveredAt && (
+      {(item.completedAt ?? (item as any).deliveredAt) && (
         <Text style={styles.line}>
           <Text style={styles.label}>{t('driver.deliveredAt')}:</Text>{' '}
-          <Text style={styles.value}>{new Date(item.deliveredAt).toLocaleString()}</Text>
+          <Text style={styles.value}>{new Date((item.completedAt ?? (item as any).deliveredAt) as string).toLocaleString()}</Text>
         </Text>
       )}
     </View>

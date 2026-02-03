@@ -54,7 +54,7 @@ export class OrderStateMachineService {
   /**
    * Check if order can be cancelled from current status
    */
-  canCancel(currentStatus: OrderStatus, cancelledBy: 'user' | 'vendor' | 'driver'): boolean {
+  canCancel(currentStatus: OrderStatus, cancelledBy: 'user' | 'vendor' | 'service_provider'): boolean {
     // Terminal states cannot be cancelled
     if (
       currentStatus === OrderStatus.CANCELLED ||
@@ -80,8 +80,8 @@ export class OrderStateMachineService {
       );
     }
 
-    // Driver can cancel if ASSIGNED (not yet en route)
-    if (cancelledBy === 'driver') {
+    // Service provider can cancel if ASSIGNED (not yet en route)
+    if (cancelledBy === 'service_provider') {
       return currentStatus === OrderStatus.ASSIGNED;
     }
 

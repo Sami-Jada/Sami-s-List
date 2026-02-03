@@ -4,7 +4,7 @@ export interface Order {
   id: string;
   orderNumber: string;
   status: string;
-  tankQuantity: number;
+  quantity: number;
   totalPrice: string;
   estimatedDeliveryTime: string | null;
   address: {
@@ -23,7 +23,7 @@ export const orderService = {
    * (If you want to explicitly choose address/payment later, extend this DTO.)
    */
   async createOrder(data: {
-    tankQuantity: number;
+    quantity: number;
     paymentMethod: string;
     addressId?: string;
   }): Promise<Order> {
