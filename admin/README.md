@@ -5,9 +5,10 @@ React admin dashboard for Sami's List. Uses the same backend as the mobile app. 
 ## Setup
 
 1. Install dependencies (from repo root): `npm install`
-2. Copy `env.example` to `.env` and set `VITE_API_URL` to your backend URL (e.g. `http://localhost:3000` for local dev).
-3. If running admin on another origin (e.g. `http://localhost:5174`), add it to the backend's `CORS_ORIGINS` (e.g. `CORS_ORIGINS=http://localhost:3000,http://localhost:5174`).
-4. Run the backend, then start the admin app:
+2. Copy the app logo into the admin panel (from `admin` folder): `npm run copy-logo`. This copies `mobile/assets/images/Logos/logo.svg` to `admin/public/logo.svg` so the sidebar and login page show the Sami's List logo.
+3. Copy `env.example` to `.env` and set `VITE_API_URL` to your backend URL (e.g. `http://localhost:3000` for local dev).
+4. If running admin on another origin (e.g. `http://localhost:5174`), add it to the backend's `CORS_ORIGINS` (e.g. `CORS_ORIGINS=http://localhost:3000,http://localhost:5174`).
+5. Run the backend, then start the admin app:
 
    ```bash
    npm run dev:admin

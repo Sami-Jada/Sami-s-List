@@ -19,28 +19,28 @@ export default function VendorsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="text-gray-600">Loading vendors...</p>;
-  if (error) return <p className="text-red-600">{error}</p>;
+  if (loading) return <p className="text-primaryText">Loading vendors...</p>;
+  if (error) return <p className="text-destructive">{error}</p>;
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-gray-800 mb-4">Vendors</h1>
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <h1 className="text-xl font-semibold text-heading mb-4">Vendors</h1>
+      <div className="bg-card rounded-lg shadow border border-highlight overflow-hidden">
+        <table className="min-w-full divide-y divide-highlight">
+          <thead className="bg-background">
             <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-heading uppercase">Name</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-heading uppercase">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-highlight">
             {vendors.map((v) => (
               <tr key={v.id}>
-                <td className="px-4 py-2 text-sm text-gray-800">{v.name}</td>
+                <td className="px-4 py-2 text-sm text-primaryText">{v.name}</td>
                 <td className="px-4 py-2">
                   <span
                     className={`inline-flex px-2 py-1 text-xs rounded ${
-                      v.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+                      v.isActive ? 'bg-brand/30 text-heading' : 'bg-highlight/30 text-primaryText'
                     }`}
                   >
                     {v.isActive ? 'Active' : 'Inactive'}

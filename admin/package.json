@@ -9,7 +9,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "copy-logo": "node copy-logo.js"
   },
   "dependencies": {
     "react": "^18.2.0",

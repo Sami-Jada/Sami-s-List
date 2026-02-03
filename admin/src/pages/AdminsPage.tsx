@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { listAdmins, createAdmin, AdminUser } from '../api';
 
 export default function AdminsPage() {
@@ -37,81 +37,81 @@ export default function AdminsPage() {
     }
   }
 
-  if (loading) return <p className="text-gray-600">Loading admins...</p>;
-  if (error) return <p className="text-red-600">{error}</p>;
+  if (loading) return <p className="text-primaryText">Loading admins...</p>;
+  if (error) return <p className="text-destructive">{error}</p>;
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold text-gray-800">Admins</h1>
+        <h1 className="text-xl font-semibold text-heading">Admins</h1>
         <button
           type="button"
           onClick={() => setShowForm(!showForm)}
-          className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700"
+          className="bg-brand text-white px-4 py-2 rounded text-sm font-medium hover:bg-brand/90"
         >
           {showForm ? 'Cancel' : 'Add admin'}
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleCreate} className="bg-white rounded-lg shadow p-6 mb-6 max-w-md space-y-4">
-          <h2 className="font-medium text-gray-800">New admin</h2>
+        <form onSubmit={handleCreate} className="bg-card rounded-lg shadow border border-highlight p-6 mb-6 max-w-md space-y-4">
+          <h2 className="font-medium text-heading">New admin</h2>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Username</label>
+            <label className="block text-sm text-primaryText mb-1">Username</label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-highlight rounded px-3 py-2 bg-white text-primaryText focus:ring-2 focus:ring-brand"
               required
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Password</label>
+            <label className="block text-sm text-primaryText mb-1">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-highlight rounded px-3 py-2 bg-white text-primaryText focus:ring-2 focus:ring-brand"
               required
               minLength={8}
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Name (optional)</label>
+            <label className="block text-sm text-primaryText mb-1">Name (optional)</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-highlight rounded px-3 py-2 bg-white text-primaryText focus:ring-2 focus:ring-brand"
             />
           </div>
-          {formError && <p className="text-sm text-red-600">{formError}</p>}
+          {formError && <p className="text-sm text-destructive">{formError}</p>}
           <button
             type="submit"
             disabled={submitting}
-            className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+            className="bg-brand text-white px-4 py-2 rounded text-sm font-medium hover:bg-brand/90 disabled:opacity-50"
           >
             {submitting ? 'Creating...' : 'Create admin'}
           </button>
         </form>
       )}
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="bg-card rounded-lg shadow border border-highlight overflow-hidden">
+        <table className="min-w-full divide-y divide-highlight">
+          <thead className="bg-background">
             <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-heading uppercase">Username</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-heading uppercase">Name</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-heading uppercase">Created</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-highlight">
             {admins.map((a) => (
               <tr key={a.id}>
-                <td className="px-4 py-2 text-sm text-gray-800">{a.username}</td>
-                <td className="px-4 py-2 text-sm text-gray-800">{a.name ?? '—'}</td>
-                <td className="px-4 py-2 text-sm text-gray-500">
+                <td className="px-4 py-2 text-sm text-primaryText">{a.username}</td>
+                <td className="px-4 py-2 text-sm text-primaryText">{a.name ?? '—'}</td>
+                <td className="px-4 py-2 text-sm text-heading">
                   {new Date(a.createdAt).toLocaleDateString()}
                 </td>
               </tr>

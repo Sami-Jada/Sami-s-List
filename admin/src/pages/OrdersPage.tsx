@@ -22,35 +22,35 @@ export default function OrdersPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="text-gray-600">Loading orders...</p>;
-  if (error) return <p className="text-red-600">{error}</p>;
+  if (loading) return <p className="text-primaryText">Loading orders...</p>;
+  if (error) return <p className="text-destructive">{error}</p>;
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-gray-800 mb-4">Orders</h1>
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <h1 className="text-xl font-semibold text-heading mb-4">Orders</h1>
+      <div className="bg-card rounded-lg shadow border border-highlight overflow-hidden">
+        <table className="min-w-full divide-y divide-highlight">
+          <thead className="bg-background">
             <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Order</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-heading uppercase">Order</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-heading uppercase">Status</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-heading uppercase">Quantity</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-heading uppercase">Total</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-heading uppercase">Created</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-highlight">
             {orders.map((o) => (
               <tr key={o.id}>
-                <td className="px-4 py-2 text-sm text-gray-800">{o.orderNumber ?? o.id.slice(0, 8)}</td>
+                <td className="px-4 py-2 text-sm text-primaryText">{o.orderNumber ?? o.id.slice(0, 8)}</td>
                 <td className="px-4 py-2">
-                  <span className="inline-flex px-2 py-1 text-xs rounded bg-gray-100 text-gray-800">
+                  <span className="inline-flex px-2 py-1 text-xs rounded bg-highlight/30 text-primaryText">
                     {o.status}
                   </span>
                 </td>
-                <td className="px-4 py-2 text-sm text-gray-800">{o.quantity ?? '—'}</td>
-                <td className="px-4 py-2 text-sm text-gray-800">{o.totalPrice ?? '—'}</td>
-                <td className="px-4 py-2 text-sm text-gray-500">
+                <td className="px-4 py-2 text-sm text-primaryText">{o.quantity ?? '—'}</td>
+                <td className="px-4 py-2 text-sm text-primaryText">{o.totalPrice ?? '—'}</td>
+                <td className="px-4 py-2 text-sm text-heading">
                   {new Date(o.createdAt).toLocaleString()}
                 </td>
               </tr>
