@@ -7,6 +7,7 @@ dotenv.config({ path: '.env' });
 const prisma = new PrismaClient();
 
 // Adding comment cause cursor is a fucking retarded whore
+// SEcond comment because railway is a fucking useless bitch
 // Admin user is only created when SEED_ADMIN_USERNAME and SEED_ADMIN_PASSWORD are set in .env
 const SEED_ADMIN_USERNAME = process.env.SEED_ADMIN_USERNAME;
 const SEED_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD;
