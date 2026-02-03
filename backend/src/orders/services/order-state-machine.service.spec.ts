@@ -105,12 +105,12 @@ describe('OrderStateMachineService', () => {
       expect(service.canCancel(OrderStatus.EN_ROUTE, 'vendor')).toBe(false);
     });
 
-    it('should allow driver to cancel ASSIGNED order', () => {
-      expect(service.canCancel(OrderStatus.ASSIGNED, 'driver')).toBe(true);
+    it('should allow service_provider to cancel ASSIGNED order', () => {
+      expect(service.canCancel(OrderStatus.ASSIGNED, 'service_provider')).toBe(true);
     });
 
-    it('should not allow driver to cancel EN_ROUTE order', () => {
-      expect(service.canCancel(OrderStatus.EN_ROUTE, 'driver')).toBe(false);
+    it('should not allow service_provider to cancel EN_ROUTE order', () => {
+      expect(service.canCancel(OrderStatus.EN_ROUTE, 'service_provider')).toBe(false);
     });
 
     it('should not allow cancellation of terminal states', () => {
