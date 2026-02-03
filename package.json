@@ -21,7 +21,7 @@
     "sync-lockfile": "npm install",
     "lint": "npm run lint --workspaces",
     "test": "npm run test --workspaces",
-    "prepare": "husky install"
+    "prepare": "node -e \"if (!process.env.CI && !process.env.VERCEL) require('child_process').execSync('npx husky install', {stdio:'inherit'})\""
   },
   "devDependencies": {
     "husky": "^8.0.3",
