@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { listOrders } from '../api';
 
 interface Order {
@@ -17,7 +17,7 @@ export default function OrdersPage() {
 
   useEffect(() => {
     listOrders()
-      .then((data) => setOrders(Array.isArray(data) ? data : []))
+      .then((data) => setOrders(Array.isArray(data) ? (data as Order[]) : []))
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load'))
       .finally(() => setLoading(false));
   }, []);
