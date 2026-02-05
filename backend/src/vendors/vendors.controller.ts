@@ -26,6 +26,7 @@ import { CreateVendorDto } from './dto/create-vendor.dto';
 import { UpdateVendorDto } from './dto/update-vendor.dto';
 import { VendorFilterDto } from './dto/vendor-filter.dto';
 import { SetVendorServicesDto } from './dto/vendor-service-link.dto';
+import { MulterFile } from './types/multer-file.interface';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Public } from '../auth/decorators/public.decorator';
@@ -145,7 +146,7 @@ export class VendorsController {
   @ApiResponse({ status: 404, description: 'Vendor not found' })
   async uploadImage(
     @Param('id') id: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: MulterFile,
   ) {
     if (!file) {
       throw new BadRequestException('No file uploaded. Use form field "file".');

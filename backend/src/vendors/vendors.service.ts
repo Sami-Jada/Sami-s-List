@@ -11,6 +11,7 @@ import { CreateVendorDto } from './dto/create-vendor.dto';
 import { UpdateVendorDto } from './dto/update-vendor.dto';
 import { VendorFilterDto } from './dto/vendor-filter.dto';
 import { VendorServiceLinkDto } from './dto/vendor-service-link.dto';
+import { MulterFile } from './types/multer-file.interface';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -359,7 +360,7 @@ export class VendorsService {
   /**
    * Upload vendor image and set imageUrl (admin)
    */
-  async uploadImage(vendorId: string, file: Express.Multer.File) {
+  async uploadImage(vendorId: string, file: MulterFile) {
     const vendor = await this.findById(vendorId);
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.mimetype)) {
