@@ -6,6 +6,9 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import AdminsPage from './pages/AdminsPage';
 import VendorsPage from './pages/VendorsPage';
+import VendorFormPage from './pages/VendorFormPage';
+import VendorDetailPage from './pages/VendorDetailPage';
+import CategoriesPage from './pages/CategoriesPage';
 import OrdersPage from './pages/OrdersPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -40,6 +43,9 @@ export default function App() {
             <Route index element={<DashboardPage />} />
             <Route path="admins" element={<AdminsPage />} />
             <Route path="vendors" element={<VendorsPage />} />
+            <Route path="vendors/new" element={<VendorFormPage />} />
+            <Route path="vendors/:id" element={<VendorDetailPage />} />
+            <Route path="categories" element={<CategoriesPage />} />
             <Route path="orders" element={<OrdersPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
