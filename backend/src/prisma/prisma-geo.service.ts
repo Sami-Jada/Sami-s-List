@@ -14,8 +14,6 @@ interface VendorWithDistance {
   address: string;
   latitude: number;
   longitude: number;
-  unitPrice: number | null;
-  serviceFee: number | null;
   rating: number;
   isActive: boolean;
   distance?: number; // Distance in kilometers
@@ -64,7 +62,7 @@ export class PrismaGeoService {
     maxDistance: number = 10,
     limit: number = 10,
   ): Promise<VendorWithDistance[]> {
-    // Get all active vendors
+    // Get all active vendors (price is per service, not on vendor)
     const vendors = await this.prisma.vendor.findMany({
       where: {
         isActive: true,
@@ -76,8 +74,6 @@ export class PrismaGeoService {
         address: true,
         latitude: true,
         longitude: true,
-        unitPrice: true,
-        serviceFee: true,
         rating: true,
         isActive: true,
       },
@@ -97,8 +93,6 @@ export class PrismaGeoService {
           ...vendor,
           latitude: Number(vendor.latitude),
           longitude: Number(vendor.longitude),
-          unitPrice: vendor.unitPrice != null ? Number(vendor.unitPrice) : null,
-          serviceFee: vendor.serviceFee != null ? Number(vendor.serviceFee) : null,
           distance,
         };
       })
@@ -203,8 +197,6 @@ export class PrismaGeoService {
         address: true,
         latitude: true,
         longitude: true,
-        unitPrice: true,
-        serviceFee: true,
         rating: true,
         isActive: true,
       },

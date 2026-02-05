@@ -72,6 +72,9 @@ temp/
 # Prisma
 backend/prisma/migrations/
 
+# Uploaded files (vendor images, etc.)
+backend/uploads/
+
 # Expo
 mobile/.expo/
 mobile/.expo-shared/

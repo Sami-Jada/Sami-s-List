@@ -25,6 +25,7 @@
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts",
+    "reset-admin-password": "ts-node scripts/reset-admin-password.ts",
     "test:connection": "ts-node test-connection.ts",
     "test:db": "ts-node test-db-detailed.ts"
   },

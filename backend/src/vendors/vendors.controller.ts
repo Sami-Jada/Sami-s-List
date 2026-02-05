@@ -8,7 +8,11 @@ import {
   Put,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
@@ -21,6 +25,7 @@ import { VendorsService } from './vendors.service';
 import { CreateVendorDto } from './dto/create-vendor.dto';
 import { UpdateVendorDto } from './dto/update-vendor.dto';
 import { VendorFilterDto } from './dto/vendor-filter.dto';
+import { SetVendorServicesDto } from './dto/vendor-service-link.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Public } from '../auth/decorators/public.decorator';
@@ -57,6 +62,31 @@ export class VendorsController {
       parseFloat(longitude),
       limit ? parseInt(limit, 10) : 10,
     );
+  }
+
+  @Get(':id/services')
+  @ApiOperation({ summary: 'Get offered services (with prices) for a vendor' })
+  @ApiParam({ name: 'id', description: 'Vendor ID' })
+  @ApiResponse({ status: 200, description: 'List of offered services with prices' })
+  @ApiResponse({ status: 404, description: 'Vendor not found' })
+  async getVendorServices(@Param('id') id: string) {
+    return this.vendorsService.getVendorServices(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Roles('ADMIN')
+  @Put(':id/services')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Set offered services and prices for a vendor (admin)' })
+  @ApiParam({ name: 'id', description: 'Vendor ID' })
+  @ApiResponse({ status: 200, description: 'Updated list of offered services' })
+  @ApiResponse({ status: 400, description: 'Invalid service ID' })
+  @ApiResponse({ status: 404, description: 'Vendor not found' })
+  async setVendorServices(
+    @Param('id') id: string,
+    @Body() dto: SetVendorServicesDto,
+  ) {
+    return this.vendorsService.setVendorServices(id, dto);
   }
 
   @Public()
@@ -101,6 +131,26 @@ export class VendorsController {
     // TODO: Verify vendor ownership when VENDOR role is used
     // For now, allow if admin or vendor (ownership check can be added later)
     return this.vendorsService.update(id, updateVendorDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Roles('ADMIN')
+  @Put(':id/upload-image')
+  @ApiBearerAuth()
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Upload vendor image (admin only)' })
+  @ApiParam({ name: 'id', description: 'Vendor ID' })
+  @ApiResponse({ status: 200, description: 'Vendor with updated imageUrl' })
+  @ApiResponse({ status: 400, description: 'No file or invalid file type/size' })
+  @ApiResponse({ status: 404, description: 'Vendor not found' })
+  async uploadImage(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded. Use form field "file".');
+    }
+    return this.vendorsService.uploadImage(id, file);
   }
 
   @UseGuards(JwtAuthGuard)

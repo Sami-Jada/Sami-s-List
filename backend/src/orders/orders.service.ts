@@ -86,24 +86,26 @@ export class OrdersService {
       userId,
     );
 
-    // Find nearest active vendor using geolocation
-    const nearestVendors = await this.vendorsService.findNearest(
+    // Find nearest vendor that offers this service
+    const nearestVendors = await this.vendorsService.findNearestByService(
+      createOrderDto.serviceId,
       Number(address.latitude),
       Number(address.longitude),
-      1, // Get only the nearest vendor
+      1,
     );
 
     if (nearestVendors.length === 0) {
       throw new BadRequestException(
-        'No active vendors found near the delivery address',
+        'No active vendors found near the delivery address that offer this service',
       );
     }
 
     const vendor = nearestVendors[0];
 
-    // Calculate price
+    // Calculate price from VendorService (price per service)
     const priceCalculation = await this.calculatePrice(
       vendor.id,
+      createOrderDto.serviceId,
       createOrderDto.quantity,
     );
 
@@ -120,6 +122,7 @@ export class OrdersService {
           orderNumber: this.generateOrderNumber(),
           userId,
           vendorId: vendor.id,
+          serviceId: createOrderDto.serviceId,
           addressId: createOrderDto.addressId,
           status: OrderStatus.PENDING,
           quantity: createOrderDto.quantity,
@@ -615,13 +618,19 @@ export class OrdersService {
   }
 
   /**
-   * Calculate order price
+   * Calculate order price from VendorService (price for this vendor + service)
    */
-  async calculatePrice(vendorId: string, quantity: number) {
-    const vendor = await this.vendorsService.findById(vendorId);
-
-    const unitPrice = vendor.unitPrice != null ? Number(vendor.unitPrice) : 0;
-    const serviceFee = vendor.serviceFee != null ? Number(vendor.serviceFee) : 0;
+  async calculatePrice(vendorId: string, serviceId: string, quantity: number) {
+    const link = await this.prisma.vendorService.findFirst({
+      where: { vendorId, serviceId },
+    });
+    if (!link) {
+      throw new BadRequestException(
+        'Vendor does not offer this service',
+      );
+    }
+    const unitPrice = link.unitPrice != null ? Number(link.unitPrice) : 0;
+    const serviceFee = link.serviceFee != null ? Number(link.serviceFee) : 0;
 
     const totalUnitPrice = unitPrice * quantity;
     const totalPrice = totalUnitPrice + serviceFee;

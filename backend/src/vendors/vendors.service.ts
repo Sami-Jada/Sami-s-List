@@ -4,10 +4,13 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
+import { join } from 'path';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateVendorDto } from './dto/create-vendor.dto';
 import { UpdateVendorDto } from './dto/update-vendor.dto';
 import { VendorFilterDto } from './dto/vendor-filter.dto';
+import { VendorServiceLinkDto } from './dto/vendor-service-link.dto';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -90,6 +93,18 @@ export class VendorsService {
     const vendor = await this.prisma.vendor.findUnique({
       where: { id },
       include: {
+        serviceLinks: {
+          include: {
+            service: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                iconName: true,
+              },
+            },
+          },
+        },
         serviceProviders: {
           select: {
             id: true,
@@ -128,7 +143,7 @@ export class VendorsService {
     // Validate coordinates
     this.validateCoordinates(latitude, longitude);
 
-    // Use PostGIS for accurate distance calculation
+    // Use PostGIS for accurate distance calculation (no unitPrice/serviceFee on Vendor)
     const vendors = await this.prisma.$queryRaw<any[]>`
       SELECT 
         id,
@@ -138,8 +153,9 @@ export class VendorsService {
         address,
         latitude,
         longitude,
-        "unitPrice",
-        "serviceFee",
+        description,
+        "imageUrl",
+        "openingHours",
         "isActive",
         rating,
         "totalOrders",
@@ -155,14 +171,53 @@ export class VendorsService {
       LIMIT ${limit}
     `;
 
-    // Convert Decimal fields to numbers
     return vendors.map((vendor) => ({
       ...vendor,
       latitude: Number(vendor.latitude),
       longitude: Number(vendor.longitude),
-      unitPrice: vendor.unitPrice != null ? Number(vendor.unitPrice) : null,
-      serviceFee: vendor.serviceFee != null ? Number(vendor.serviceFee) : null,
       distance: Number(vendor.distance_km),
+    }));
+  }
+
+  /**
+   * Find nearest vendors that offer a given service (for order creation).
+   * Returns vendors with distance and the price for that service (from VendorService).
+   */
+  async findNearestByService(
+    serviceId: string,
+    latitude: number,
+    longitude: number,
+    limit: number = 1,
+  ): Promise<Array<{ id: string; distance: number; unitPrice: number; serviceFee: number; [key: string]: unknown }>> {
+    this.validateCoordinates(latitude, longitude);
+    const rows = await this.prisma.$queryRaw<any[]>`
+      SELECT 
+        v.id,
+        v.name,
+        v.phone,
+        v.address,
+        v.latitude,
+        v.longitude,
+        v."isActive",
+        vs."unitPrice",
+        vs."serviceFee",
+        ST_Distance(
+          ST_MakePoint(v.longitude::float, v.latitude::float),
+          ST_MakePoint(${longitude}::float, ${latitude}::float)
+        ) * 111.32 as distance_km
+      FROM vendors v
+      INNER JOIN vendor_services vs ON vs."vendorId" = v.id AND vs."serviceId" = ${serviceId}
+      WHERE v."isActive" = true
+      ORDER BY distance_km
+      LIMIT ${limit}
+    `;
+    return rows.map((r) => ({
+      ...r,
+      latitude: Number(r.latitude),
+      longitude: Number(r.longitude),
+      distance: Number(r.distance_km),
+      unitPrice: r.unitPrice != null ? Number(r.unitPrice) : 0,
+      serviceFee: r.serviceFee != null ? Number(r.serviceFee) : 0,
     }));
   }
 
@@ -190,15 +245,20 @@ export class VendorsService {
         address: createVendorDto.address,
         latitude: createVendorDto.latitude,
         longitude: createVendorDto.longitude,
-        unitPrice: createVendorDto.unitPrice != null ? createVendorDto.unitPrice : undefined,
-        serviceFee: createVendorDto.serviceFee != null ? createVendorDto.serviceFee : undefined,
+        description: createVendorDto.description,
+        imageUrl: createVendorDto.imageUrl,
+        openingHours: createVendorDto.openingHours as object,
         isActive: createVendorDto.isActive ?? true,
       },
     });
 
+    if (createVendorDto.services?.length) {
+      await this.syncVendorServices(vendor.id, createVendorDto.services);
+    }
+
     this.logger.log(`Vendor created: ${vendor.id} (${vendor.name})`);
 
-    return vendor;
+    return this.findById(vendor.id);
   }
 
   /**
@@ -214,14 +274,24 @@ export class VendorsService {
       this.validateCoordinates(latitude, longitude);
     }
 
-    const updatedVendor = await this.prisma.vendor.update({
+    const { services, ...vendorData } = updateVendorDto as UpdateVendorDto & { services?: CreateVendorDto['services'] };
+    const data: Prisma.VendorUpdateInput = { ...vendorData };
+    if (vendorData.openingHours !== undefined) {
+      data.openingHours = vendorData.openingHours as object;
+    }
+
+    await this.prisma.vendor.update({
       where: { id },
-      data: updateVendorDto,
+      data,
     });
+
+    if (services !== undefined) {
+      await this.syncVendorServices(id, services);
+    }
 
     this.logger.log(`Vendor updated: ${id}`);
 
-    return updatedVendor;
+    return this.findById(id);
   }
 
   /**
@@ -284,6 +354,85 @@ export class VendorsService {
     );
 
     return updatedVendor;
+  }
+
+  /**
+   * Upload vendor image and set imageUrl (admin)
+   */
+  async uploadImage(vendorId: string, file: Express.Multer.File) {
+    const vendor = await this.findById(vendorId);
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.mimetype)) {
+      throw new BadRequestException(
+        'Invalid file type. Allowed: JPEG, PNG, WebP',
+      );
+    }
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      throw new BadRequestException('File size must not exceed 5MB');
+    }
+    const ext = file.mimetype === 'image/jpeg' ? 'jpg' : file.mimetype === 'image/png' ? 'png' : 'webp';
+    const uploadsDir = join(process.cwd(), 'uploads', 'vendors');
+    if (!existsSync(uploadsDir)) {
+      mkdirSync(uploadsDir, { recursive: true });
+    }
+    const filename = `${vendorId}.${ext}`;
+    const filepath = join(uploadsDir, filename);
+    writeFileSync(filepath, file.buffer);
+    const imageUrl = `vendors/${filename}`;
+    await this.prisma.vendor.update({
+      where: { id: vendorId },
+      data: { imageUrl },
+    });
+    this.logger.log(`Vendor image uploaded: ${vendorId}`);
+    return this.findById(vendorId);
+  }
+
+  /**
+   * Get offered services (with prices) for a vendor
+   */
+  async getVendorServices(vendorId: string) {
+    await this.findById(vendorId); // throws if not found
+    return this.prisma.vendorService.findMany({
+      where: { vendorId },
+      include: {
+        service: {
+          select: { id: true, name: true, slug: true, iconName: true },
+        },
+      },
+    });
+  }
+
+  /**
+   * Replace vendor's offered services with the given list (each with price)
+   */
+  async setVendorServices(vendorId: string, dto: { services: VendorServiceLinkDto[] }) {
+    await this.findById(vendorId); // throws if not found
+    await this.syncVendorServices(vendorId, dto.services);
+    return this.getVendorServices(vendorId);
+  }
+
+  /**
+   * Sync VendorService rows for a vendor (delete existing, create new with prices)
+   */
+  private async syncVendorServices(vendorId: string, services: VendorServiceLinkDto[]) {
+    await this.prisma.vendorService.deleteMany({ where: { vendorId } });
+    for (const link of services) {
+      const service = await this.prisma.service.findUnique({
+        where: { id: link.serviceId },
+      });
+      if (!service) {
+        throw new BadRequestException(`Service with ID ${link.serviceId} not found`);
+      }
+      await this.prisma.vendorService.create({
+        data: {
+          vendorId,
+          serviceId: link.serviceId,
+          unitPrice: link.unitPrice,
+          serviceFee: link.serviceFee,
+        },
+      });
+    }
   }
 
   /**

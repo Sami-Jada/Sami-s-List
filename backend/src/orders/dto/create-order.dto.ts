@@ -5,6 +5,14 @@ import { Type } from 'class-transformer';
 
 export class CreateOrderDto {
   @ApiProperty({
+    description: 'Service (category) ID being ordered (e.g. Gas Canister Refill, Plumbers)',
+    example: 'uuid',
+  })
+  @IsString()
+  @IsNotEmpty()
+  serviceId: string;
+
+  @ApiProperty({
     description: 'Address ID for delivery',
     example: 'uuid',
   })

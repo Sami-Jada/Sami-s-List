@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
+import { join } from 'path';
+import * as express from 'express';
 import { AppModule } from './app.module';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
@@ -48,6 +50,9 @@ async function bootstrap() {
 
   // API prefix
   app.setGlobalPrefix('api');
+
+  // Serve uploaded files (e.g. vendor images) at /api/uploads/*
+  app.use('/api/uploads', express.static(join(process.cwd(), 'uploads')));
 
   // Swagger documentation
   if (process.env.NODE_ENV !== 'production') {

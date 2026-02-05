@@ -56,6 +56,7 @@ model Service {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   vendorLinks VendorService[]
+  orders      Order[]
 
   @@index([isPopular])
   @@index([sortOrder])
@@ -63,12 +64,14 @@ model Service {
 }
 
 model VendorService {
-  id        String   @id @default(uuid())
-  vendorId  String
-  serviceId String
-  createdAt DateTime @default(now())
-  vendor    Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  service   Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  id         String   @id @default(uuid())
+  vendorId   String
+  serviceId  String
+  unitPrice  Decimal? @db.Decimal(10, 2)
+  serviceFee Decimal? @db.Decimal(10, 2)
+  createdAt  DateTime @default(now())
+  vendor     Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  service    Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
   @@unique([vendorId, serviceId])
   @@index([vendorId])
@@ -77,24 +80,25 @@ model VendorService {
 }
 
 model Vendor {
-  id              String             @id @default(uuid())
-  name            String
-  phone           String             @unique
-  businessLicense String?
-  address         String
-  latitude        Decimal            @db.Decimal(10, 8)
-  longitude       Decimal            @db.Decimal(11, 8)
-  unitPrice       Decimal?           @db.Decimal(10, 2)
-  serviceFee      Decimal?           @db.Decimal(10, 2)
-  isActive        Boolean            @default(true)
-  rating          Float              @default(0)
-  totalOrders     Int                @default(0)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id               String             @id @default(uuid())
+  name             String
+  phone            String             @unique
+  businessLicense  String?
+  address          String
+  latitude         Decimal            @db.Decimal(10, 8)
+  longitude        Decimal            @db.Decimal(11, 8)
+  description      String?
+  imageUrl         String?
+  openingHours     Json?
+  isActive         Boolean            @default(true)
+  rating           Float              @default(0)
+  totalOrders      Int                @default(0)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
   serviceProviders ServiceProvider[]
-  orders          Order[]
-  ratings         Rating[]
-  serviceLinks   VendorService[]
+  orders           Order[]
+  ratings          Rating[]
+  serviceLinks     VendorService[]
 
   @@index([phone])
   @@index([latitude, longitude])
@@ -132,6 +136,7 @@ model Order {
   orderNumber           String               @unique
   userId                String
   vendorId              String?
+  serviceId             String?
   serviceProviderId     String?
   addressId             String
   status                String               @default("PENDING")
@@ -147,14 +152,16 @@ model Order {
   updatedAt             DateTime             @updatedAt
   statusHistory         OrderStatusHistory[]
   address               Address              @relation(fields: [addressId], references: [id], onDelete: Cascade)
-  serviceProvider      ServiceProvider?     @relation(fields: [serviceProviderId], references: [id])
+  service               Service?             @relation(fields: [serviceId], references: [id])
+  serviceProvider       ServiceProvider?     @relation(fields: [serviceProviderId], references: [id])
   user                  User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vendor                Vendor?             @relation(fields: [vendorId], references: [id])
+  vendor                Vendor?              @relation(fields: [vendorId], references: [id])
   payment               Payment?
   rating                Rating?
 
   @@index([userId])
   @@index([vendorId])
+  @@index([serviceId])
   @@index([serviceProviderId])
   @@index([status])
   @@index([orderNumber])

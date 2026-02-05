@@ -28,26 +28,7 @@ async function main() {
   await prisma.vendor.deleteMany();
   await prisma.user.deleteMany();
 
-  // Create 1 Vendor
-  console.log('📦 Creating vendor...');
-  const vendor = await prisma.vendor.create({
-    data: {
-      name: 'Al-Ahli Gas Company',
-      phone: '+962791234567', // Note: Encrypt in production
-      businessLicense: 'BL-2024-001',
-      address: 'King Hussein Street, Amman',
-      latitude: 31.9539, // Amman coordinates
-      longitude: 35.9106,
-      unitPrice: 8.5,
-      serviceFee: 2.0,
-      isActive: true,
-      rating: 4.5,
-      totalOrders: 0,
-    },
-  });
-  console.log(`✅ Created vendor: ${vendor.name}`);
-
-  // Create service categories (for Categories screen)
+  // Create service categories first (vendor links to them)
   console.log('📂 Creating service categories...');
   const serviceGas = await prisma.service.create({
     data: {
@@ -96,14 +77,43 @@ async function main() {
   });
   console.log(`✅ Created services: Gas, Plumbers, Electricians, Water Tank, Gardeners`);
 
-  // Link vendor to Gas Canister Refill (and optionally others)
+  // Create 1 Vendor (with required description, imageUrl, openingHours)
+  console.log('📦 Creating vendor...');
+  const defaultOpeningHours = {
+    monday: { open: '09:00', close: '17:00' },
+    tuesday: { open: '09:00', close: '17:00' },
+    wednesday: { open: '09:00', close: '17:00' },
+    thursday: { open: '09:00', close: '17:00' },
+    friday: { open: '09:00', close: '15:00' },
+    saturday: null,
+    sunday: null,
+  };
+  const vendor = await prisma.vendor.create({
+    data: {
+      name: 'Al-Ahli Gas Company',
+      phone: '+962791234567', // Note: Encrypt in production
+      businessLicense: 'BL-2024-001',
+      address: 'King Hussein Street, Amman',
+      latitude: 31.9539, // Amman coordinates
+      longitude: 35.9106,
+      description: 'Reliable gas canister refills and plumbing services in Amman.',
+      imageUrl: 'vendors/placeholder.png', // Replace with real upload in production
+      openingHours: defaultOpeningHours,
+      isActive: true,
+      rating: 4.5,
+      totalOrders: 0,
+    },
+  });
+  console.log(`✅ Created vendor: ${vendor.name}`);
+
+  // Link vendor to services with price per service
   await prisma.vendorService.create({
-    data: { vendorId: vendor.id, serviceId: serviceGas.id },
+    data: { vendorId: vendor.id, serviceId: serviceGas.id, unitPrice: 8.5, serviceFee: 2.0 },
   });
   await prisma.vendorService.create({
-    data: { vendorId: vendor.id, serviceId: servicePlumber.id },
+    data: { vendorId: vendor.id, serviceId: servicePlumber.id, unitPrice: 25.0, serviceFee: 5.0 },
   });
-  console.log(`✅ Linked vendor to services: Gas Canister Refill, Plumbers`);
+  console.log(`✅ Linked vendor to services: Gas Canister Refill (8.5+2), Plumbers (25+5)`);
 
   // Create 2 Service providers
   console.log('🚗 Creating service providers...');
@@ -246,6 +256,7 @@ async function main() {
       orderNumber: `ORD-${Date.now()}-001`,
       userId: user1.id,
       vendorId: vendor.id,
+      serviceId: serviceGas.id,
       serviceProviderId: sp1.id,
       addressId: address1.id,
       status: 'DELIVERED',
@@ -264,6 +275,7 @@ async function main() {
       orderNumber: `ORD-${Date.now()}-002`,
       userId: user2.id,
       vendorId: vendor.id,
+      serviceId: serviceGas.id,
       addressId: address3.id,
       status: 'EN_ROUTE',
       quantity: 1,
@@ -281,6 +293,7 @@ async function main() {
       orderNumber: `ORD-${Date.now()}-003`,
       userId: user3.id,
       vendorId: vendor.id,
+      serviceId: serviceGas.id,
       addressId: address4.id,
       status: 'PENDING',
       quantity: 1,
